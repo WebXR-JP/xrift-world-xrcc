@@ -1,6 +1,7 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { ShaderMaterial, AdditiveBlending, DoubleSide } from 'three'
+import { Billboard } from '@react-three/drei'
+import { ShaderMaterial, AdditiveBlending } from 'three'
 
 export interface FireProps {
   position?: [number, number, number]
@@ -77,7 +78,7 @@ const fragmentShader = `
     float noiseValue = turbulence(vec2(uv.x * 1.5, uv.y * 1.2 - uTime * 1.5));
 
     // 炎の形状（下が広く上が細い）
-    float shape = 1.0 - smoothstep(0.0, 0.4 + noiseValue * 0.3, dist * (0.3 + height * 1.2));
+    float shape = 1.0 - smoothstep(0.0, 0.4 + noiseValue * 0.25, dist * (0.34 + height * 1.1));
 
     // 高さによる減衰（上に行くほど消える）
     float heightFade = 1.0 - pow(height, 0.8);
@@ -111,11 +112,11 @@ const fragmentShader = `
     float centerBrightness = 1.0 - dist * 0.5;
     fireColor *= centerBrightness;
 
-    // 最終出力
-    float alpha = fire * (1.0 - height * 0.5) * 0.7;
+    // 最終出力（Billboard用に濃くする）
+    float alpha = fire * (1.0 - height * 0.3) * 1.5;
     alpha = clamp(alpha, 0.0, 1.0);
 
-    gl_FragColor = vec4(fireColor * fire * 1.5, alpha);
+    gl_FragColor = vec4(fireColor * fire * 3.0, alpha);
   }
 `
 
@@ -138,59 +139,20 @@ export const Fire: React.FC<FireProps> = ({ position = [0, 0, 0], scale = 1 }) =
 
   return (
     <group position={position} scale={scale}>
-      {/* メインの炎 */}
-      <mesh position={[0, 0.6, 0]}>
-        <planeGeometry args={[1, 1.5, 32, 32]} />
-        <shaderMaterial
-          ref={materialRef}
-          vertexShader={vertexShader}
-          fragmentShader={fragmentShader}
-          uniforms={uniforms}
-          transparent
-          blending={AdditiveBlending}
-          side={DoubleSide}
-          depthWrite={false}
-        />
-      </mesh>
-      {/* 90度回転した炎（立体感を出すため） */}
-      <mesh position={[0, 0.6, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <planeGeometry args={[1, 1.5, 32, 32]} />
-        <shaderMaterial
-          vertexShader={vertexShader}
-          fragmentShader={fragmentShader}
-          uniforms={uniforms}
-          transparent
-          blending={AdditiveBlending}
-          side={DoubleSide}
-          depthWrite={false}
-        />
-      </mesh>
-      {/* 45度回転した炎 */}
-      <mesh position={[0, 0.6, 0]} rotation={[0, Math.PI / 4, 0]}>
-        <planeGeometry args={[0.8, 1.3, 32, 32]} />
-        <shaderMaterial
-          vertexShader={vertexShader}
-          fragmentShader={fragmentShader}
-          uniforms={uniforms}
-          transparent
-          blending={AdditiveBlending}
-          side={DoubleSide}
-          depthWrite={false}
-        />
-      </mesh>
-      {/* -45度回転した炎 */}
-      <mesh position={[0, 0.6, 0]} rotation={[0, -Math.PI / 4, 0]}>
-        <planeGeometry args={[0.8, 1.3, 32, 32]} />
-        <shaderMaterial
-          vertexShader={vertexShader}
-          fragmentShader={fragmentShader}
-          uniforms={uniforms}
-          transparent
-          blending={AdditiveBlending}
-          side={DoubleSide}
-          depthWrite={false}
-        />
-      </mesh>
+      <Billboard position={[0, 0.6, 0]}>
+        <mesh>
+          <planeGeometry args={[1, 1.5, 32, 32]} />
+          <shaderMaterial
+            ref={materialRef}
+            vertexShader={vertexShader}
+            fragmentShader={fragmentShader}
+            uniforms={uniforms}
+            transparent
+            blending={AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
+      </Billboard>
     </group>
   )
 }
