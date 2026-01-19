@@ -1,4 +1,8 @@
-import { SpawnPoint } from "@xrift/world-components";
+import {
+  SpawnPoint,
+  LiveVideoPlayer,
+  ScreenShareDisplay,
+} from "@xrift/world-components";
 import { RigidBody } from "@react-three/rapier";
 import { Instances, Instance } from "@react-three/drei";
 import { useRef, useMemo } from "react";
@@ -240,6 +244,37 @@ export const World: React.FC<WorldProps> = ({
         />
       </group>
 
+      {/* 木の看板（画面共有用） */}
+      <group position={[-5, 0, -5]} rotation={[0, Math.PI / 4, 0]}>
+        {/* 支柱（左） */}
+        <mesh position={[-1.2, 1.5, 0]}>
+          <cylinderGeometry args={[0.1, 0.15, 3]} />
+          <meshLambertMaterial color="#5c4033" />
+        </mesh>
+        {/* 支柱（右） */}
+        <mesh position={[1.2, 1.5, 0]}>
+          <cylinderGeometry args={[0.1, 0.15, 3]} />
+          <meshLambertMaterial color="#5c4033" />
+        </mesh>
+        {/* 横木（上） */}
+        <mesh position={[0, 3.1, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.08, 0.08, 2.8]} />
+          <meshLambertMaterial color="#5c4033" />
+        </mesh>
+        {/* 看板の背面（木の板） */}
+        <mesh position={[0, 2, 0.19]} scale={[1.67, 1.54, 1]}>
+          <boxGeometry args={[3, 2, 0.1]} />
+          <meshLambertMaterial color="#8B4513" />
+        </mesh>
+        {/* 画面共有ディスプレイ */}
+        <ScreenShareDisplay
+          id="screen-share-board"
+          position={[0, 2, 0.26]}
+          rotation={[0, 0, 0]}
+          width={4.5}
+        />
+      </group>
+
       {/* 壁（北） */}
       <RigidBody type="fixed" colliders="cuboid" restitution={0} friction={0}>
         <mesh position={[0, wallHeight / 2, -worldSize * 0.85]} castShadow>
@@ -271,6 +306,42 @@ export const World: React.FC<WorldProps> = ({
           <meshLambertMaterial color={COLORS.wall} />
         </mesh>
       </RigidBody>
+
+      {/* VideoPlayer（北の壁） */}
+      <LiveVideoPlayer
+        id="video-north"
+        position={[0, 2.5, -worldSize * 0.85 + 0.3]}
+        rotation={[0, 0, 0]}
+        width={6}
+        url=""
+      />
+
+      {/* VideoPlayer（南の壁） */}
+      <LiveVideoPlayer
+        id="video-south"
+        position={[0, 2.5, worldSize * 0.85 - 0.3]}
+        rotation={[0, Math.PI, 0]}
+        width={6}
+        url=""
+      />
+
+      {/* VideoPlayer（東の壁） */}
+      <LiveVideoPlayer
+        id="video-east"
+        position={[worldSize * 0.85 - 0.3, 2.5, 0]}
+        rotation={[0, -Math.PI / 2, 0]}
+        width={6}
+        url=""
+      />
+
+      {/* VideoPlayer（西の壁） */}
+      <LiveVideoPlayer
+        id="video-west"
+        position={[-worldSize * 0.85 + 0.3, 2.5, 0]}
+        rotation={[0, Math.PI / 2, 0]}
+        width={6}
+        url=""
+      />
 
       {/* 細い道（南東方向） */}
       <RigidBody type="fixed" colliders="cuboid" restitution={0} friction={0}>
