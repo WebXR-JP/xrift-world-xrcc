@@ -23,8 +23,6 @@ export const World: React.FC<WorldProps> = ({
   scale = 1,
 }) => {
   const worldSize = WORLD_CONFIG.size * scale
-  const wallHeight = WORLD_CONFIG.wallHeight * scale
-  const wallThickness = WORLD_CONFIG.wallThickness * scale
 
   return (
     <group position={position} scale={scale}>
@@ -89,42 +87,10 @@ export const World: React.FC<WorldProps> = ({
       />
 
       {/* 壁 + VideoPlayer */}
-      <VideoWall
-        id="video-north"
-        direction="north"
-        distance={worldSize * 0.85}
-        wallWidth={wallThickness * 20}
-        wallHeight={wallHeight}
-        wallThickness={wallThickness}
-        color={COLORS.wall}
-      />
-      <VideoWall
-        id="video-south"
-        direction="south"
-        distance={worldSize * 0.85}
-        wallWidth={wallThickness * 20}
-        wallHeight={wallHeight}
-        wallThickness={wallThickness}
-        color={COLORS.wall}
-      />
-      <VideoWall
-        id="video-east"
-        direction="east"
-        distance={worldSize * 0.85}
-        wallWidth={wallThickness * 20}
-        wallHeight={wallHeight}
-        wallThickness={wallThickness}
-        color={COLORS.wall}
-      />
-      <VideoWall
-        id="video-west"
-        direction="west"
-        distance={worldSize * 0.85}
-        wallWidth={wallThickness * 20}
-        wallHeight={wallHeight}
-        wallThickness={wallThickness}
-        color={COLORS.wall}
-      />
+      <VideoWall id="video-north" position={[0, 0, -worldSize * 0.85]} color={COLORS.wall} />
+      <VideoWall id="video-south" position={[0, 0, worldSize * 0.85]} rotation={[0, Math.PI, 0]} color={COLORS.wall} />
+      <VideoWall id="video-east" position={[worldSize * 0.85, 0, 0]} rotation={[0, -Math.PI / 2, 0]} color={COLORS.wall} />
+      <VideoWall id="video-west" position={[-worldSize * 0.85, 0, 0]} rotation={[0, Math.PI / 2, 0]} color={COLORS.wall} />
 
       {/* 細い道（南東方向） */}
       <RigidBody type="fixed" colliders="cuboid" restitution={0} friction={0}>

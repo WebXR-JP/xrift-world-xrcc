@@ -1,107 +1,38 @@
-import { RigidBody } from '@react-three/rapier'
-import { LiveVideoPlayer } from '@xrift/world-components'
+import { RigidBody } from "@react-three/rapier";
+import { LiveVideoPlayer } from "@xrift/world-components";
 
 export interface VideoWallProps {
-  id: string
-  direction: 'north' | 'south' | 'east' | 'west'
-  distance: number
-  wallWidth: number
-  wallHeight: number
-  wallThickness: number
-  color?: string
-  videoWidth?: number
-  videoUrl?: string
-  videoOffset?: number
-  videoHeight?: number
+  id: string;
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+  color?: string;
 }
 
-interface WallConfig {
-  wallPosition: [number, number, number]
-  wallSize: [number, number, number]
-  videoPosition: [number, number, number]
-  videoRotation: [number, number, number]
-}
-
-const getWallConfig = (
-  direction: 'north' | 'south' | 'east' | 'west',
-  distance: number,
-  wallWidth: number,
-  wallHeight: number,
-  wallThickness: number,
-  videoOffset: number,
-  videoHeight: number,
-): WallConfig => {
-  switch (direction) {
-    case 'north':
-      return {
-        wallPosition: [0, wallHeight / 2, -distance],
-        wallSize: [wallWidth, wallHeight, wallThickness],
-        videoPosition: [0, videoHeight, -distance + videoOffset],
-        videoRotation: [0, 0, 0],
-      }
-    case 'south':
-      return {
-        wallPosition: [0, wallHeight / 2, distance],
-        wallSize: [wallWidth, wallHeight, wallThickness],
-        videoPosition: [0, videoHeight, distance - videoOffset],
-        videoRotation: [0, Math.PI, 0],
-      }
-    case 'east':
-      return {
-        wallPosition: [distance, wallHeight / 2, 0],
-        wallSize: [wallThickness, wallHeight, wallWidth],
-        videoPosition: [distance - videoOffset, videoHeight, 0],
-        videoRotation: [0, -Math.PI / 2, 0],
-      }
-    case 'west':
-    default:
-      return {
-        wallPosition: [-distance, wallHeight / 2, 0],
-        wallSize: [wallThickness, wallHeight, wallWidth],
-        videoPosition: [-distance + videoOffset, videoHeight, 0],
-        videoRotation: [0, Math.PI / 2, 0],
-      }
-  }
-}
+const WALL_WIDTH = 10;
+const WALL_HEIGHT = 5;
+const WALL_THICKNESS = 0.5;
 
 export const VideoWall: React.FC<VideoWallProps> = ({
   id,
-  direction,
-  distance,
-  wallWidth,
-  wallHeight,
-  wallThickness,
-  color = '#8B7355',
-  videoWidth = 6,
-  videoUrl = '',
-  videoOffset = 0.3,
-  videoHeight = 2.5,
+  position = [0, 0, 0],
+  rotation = [0, 0, 0],
+  color = "#8B7355",
 }) => {
-  const config = getWallConfig(
-    direction,
-    distance,
-    wallWidth,
-    wallHeight,
-    wallThickness,
-    videoOffset,
-    videoHeight,
-  )
-
   return (
-    <>
+    <group position={position} rotation={rotation}>
       <RigidBody type="fixed" colliders="cuboid" restitution={0} friction={0}>
-        <mesh position={config.wallPosition} castShadow>
-          <boxGeometry args={config.wallSize} />
+        <mesh position={[0, WALL_HEIGHT / 2, 0]} castShadow>
+          <boxGeometry args={[WALL_WIDTH, WALL_HEIGHT, WALL_THICKNESS]} />
           <meshLambertMaterial color={color} />
         </mesh>
       </RigidBody>
       <LiveVideoPlayer
         id={id}
-        position={config.videoPosition}
-        rotation={config.videoRotation}
-        width={videoWidth}
-        url={videoUrl}
+        position={[0, 2.5, 0.3]}
+        rotation={[0, 0, 0]}
+        width={6}
+        url=""
       />
-    </>
-  )
-}
+    </group>
+  );
+};
