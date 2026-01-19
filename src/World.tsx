@@ -238,9 +238,11 @@ export const World: React.FC<WorldProps> = ({
         {/* 光源 */}
         <pointLight
           position={[0, 0.6, 0]}
-          color="#ff6633"
-          intensity={30}
-          distance={25}
+          color="#5d1d08"
+          intensity={200}
+          distance={40}
+          decay={0.6}
+          castShadow={false}
         />
       </group>
 
