@@ -1,0 +1,528 @@
+import { SpawnPoint } from "@xrift/world-components";
+import { RigidBody } from "@react-three/rapier";
+import { Instances, Instance } from "@react-three/drei";
+import { useRef, useMemo } from "react";
+import { Mesh } from "three";
+import { Skybox } from "./components/Skybox";
+import { COLORS, WORLD_CONFIG } from "./constants";
+
+// 木の位置データを生成（レンガ色の床の外側、緑の床の内側）
+const generateTreePositions = (
+  count: number,
+  innerRadius: number,
+  outerRadius: number,
+) => {
+  const positions: { x: number; z: number; scale: number; rotation: number }[] =
+    [];
+  const seed = 12345;
+
+  const seededRandom = (i: number) => {
+    const x = Math.sin(seed + i * 9999) * 10000;
+    return x - Math.floor(x);
+  };
+
+  for (let i = 0; i < count; i++) {
+    const angle = seededRandom(i * 2) * Math.PI * 2;
+    const radius =
+      innerRadius + seededRandom(i * 2 + 1) * (outerRadius - innerRadius);
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+
+    // 南東の道付近（45度方向）は避ける
+    const treeAngle = Math.atan2(z, x);
+    if (
+      treeAngle > Math.PI / 8 &&
+      treeAngle < (Math.PI * 3) / 8 &&
+      radius > innerRadius * 0.9
+    ) {
+      continue;
+    }
+
+    positions.push({
+      x,
+      z,
+      scale: 0.7 + seededRandom(i * 3) * 0.6,
+      rotation: seededRandom(i * 4) * Math.PI * 2,
+    });
+  }
+  return positions;
+};
+
+// 草の位置データを生成
+const generateGrassPositions = (
+  count: number,
+  innerRadius: number,
+  outerRadius: number,
+) => {
+  const positions: { x: number; z: number; scale: number; rotation: number }[] =
+    [];
+  const seed = 54321; // 木とは異なるシード
+
+  const seededRandom = (i: number) => {
+    const x = Math.sin(seed + i * 7777) * 10000;
+    return x - Math.floor(x);
+  };
+
+  for (let i = 0; i < count; i++) {
+    const angle = seededRandom(i * 2) * Math.PI * 2;
+    const radius =
+      innerRadius + seededRandom(i * 2 + 1) * (outerRadius - innerRadius);
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+
+    // 南東の道付近は避ける
+    const grassAngle = Math.atan2(z, x);
+    if (
+      grassAngle > Math.PI / 8 &&
+      grassAngle < (Math.PI * 3) / 8 &&
+      radius > innerRadius * 0.85
+    ) {
+      continue;
+    }
+
+    positions.push({
+      x,
+      z,
+      scale: 0.3 + seededRandom(i * 3) * 0.5,
+      rotation: seededRandom(i * 4) * Math.PI * 2,
+    });
+  }
+  return positions;
+};
+
+export interface WorldProps {
+  position?: [number, number, number];
+  scale?: number;
+}
+
+export const World: React.FC<WorldProps> = ({
+  position = [0, 0, 0],
+  scale = 1,
+}) => {
+  const groundRef = useRef<Mesh>(null);
+  const worldSize = WORLD_CONFIG.size * scale;
+  const wallHeight = WORLD_CONFIG.wallHeight * scale;
+  const wallThickness = WORLD_CONFIG.wallThickness * scale;
+
+  // 木の位置を生成（160本）
+  const treePositions = useMemo(
+    () => generateTreePositions(160, worldSize * 1.1, worldSize * 1.9),
+    [worldSize],
+  );
+
+  // 草の位置を生成（500本）
+  const grassPositions = useMemo(
+    () => generateGrassPositions(500, worldSize * 1.05, worldSize * 1.95),
+    [worldSize],
+  );
+
+  return (
+    <group position={position} scale={scale}>
+      {/* Skybox - 360度パノラマ背景 */}
+      <Skybox radius={500} />
+
+      {/* プレイヤーのスポーン地点（小道の先） */}
+      <group position={[worldSize * 1.1, 0, worldSize * 1.1]}>
+        <SpawnPoint yaw={45} />
+      </group>
+
+      {/* 照明設定 */}
+      <ambientLight intensity={0.4} color="#d0d0d0" />
+
+      {/* 地面（緑・大） */}
+      <RigidBody type="fixed" colliders="trimesh" restitution={0} friction={0}>
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, -0.1, 0]}
+          receiveShadow
+        >
+          <circleGeometry args={[worldSize * 2, 64]} />
+          <meshLambertMaterial color="#4a8f3c" />
+        </mesh>
+      </RigidBody>
+
+      {/* 木（インスタンシング） */}
+      {/* 幹 */}
+      <Instances limit={200}>
+        <cylinderGeometry args={[0.2, 0.3, 3]} />
+        <meshLambertMaterial color="#5c4033" />
+        {treePositions.map((tree, i) => (
+          <Instance
+            key={`trunk-${i}`}
+            position={[tree.x, 1.5 * tree.scale, tree.z]}
+            scale={[tree.scale, tree.scale, tree.scale]}
+            rotation={[0, tree.rotation, 0]}
+          />
+        ))}
+      </Instances>
+      {/* 葉 */}
+      <Instances limit={200}>
+        <coneGeometry args={[1.5, 3, 8]} />
+        <meshLambertMaterial color="#228b22" />
+        {treePositions.map((tree, i) => (
+          <Instance
+            key={`leaves-${i}`}
+            position={[tree.x, 3.5 * tree.scale, tree.z]}
+            scale={[tree.scale, tree.scale, tree.scale]}
+            rotation={[0, tree.rotation, 0]}
+          />
+        ))}
+      </Instances>
+
+      {/* 草（インスタンシング） */}
+      <Instances limit={600}>
+        <coneGeometry args={[0.15, 0.5, 4]} />
+        <meshLambertMaterial color="#3cb371" />
+        {grassPositions.map((grass, i) => (
+          <Instance
+            key={`grass-${i}`}
+            position={[grass.x, 0.15 * grass.scale, grass.z]}
+            scale={[grass.scale, grass.scale * 1.5, grass.scale]}
+            rotation={[0, grass.rotation, 0]}
+          />
+        ))}
+      </Instances>
+      {/* 草（濃い緑） */}
+      <Instances limit={600}>
+        <coneGeometry args={[0.12, 0.4, 4]} />
+        <meshLambertMaterial color="#228b22" />
+        {grassPositions.map((grass, i) => (
+          <Instance
+            key={`grass2-${i}`}
+            position={[grass.x + 0.1, 0.12 * grass.scale, grass.z + 0.1]}
+            scale={[grass.scale * 0.8, grass.scale * 1.2, grass.scale * 0.8]}
+            rotation={[0, grass.rotation + 0.5, 0]}
+          />
+        ))}
+      </Instances>
+
+      {/* 地面（レンガ色・円形） */}
+      <RigidBody type="fixed" colliders="trimesh" restitution={0} friction={0}>
+        <mesh
+          ref={groundRef}
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, 0, 0]}
+          receiveShadow
+        >
+          <circleGeometry args={[worldSize, 64]} />
+          <meshLambertMaterial color="#B5651D" />
+        </mesh>
+      </RigidBody>
+
+      {/* たき火（中央） */}
+      <group position={[0, 0, 0]}>
+        {/* 薪 */}
+        <mesh position={[-0.3, 0.1, 0]} rotation={[0, 0, Math.PI / 6]}>
+          <cylinderGeometry args={[0.08, 0.1, 0.8]} />
+          <meshLambertMaterial color="#4a3728" />
+        </mesh>
+        <mesh position={[0.3, 0.1, 0]} rotation={[0, 0, -Math.PI / 6]}>
+          <cylinderGeometry args={[0.08, 0.1, 0.8]} />
+          <meshLambertMaterial color="#4a3728" />
+        </mesh>
+        <mesh position={[0, 0.1, -0.3]} rotation={[Math.PI / 6, 0, 0]}>
+          <cylinderGeometry args={[0.08, 0.1, 0.8]} />
+          <meshLambertMaterial color="#4a3728" />
+        </mesh>
+        <mesh position={[0, 0.1, 0.3]} rotation={[-Math.PI / 6, 0, 0]}>
+          <cylinderGeometry args={[0.08, 0.1, 0.8]} />
+          <meshLambertMaterial color="#4a3728" />
+        </mesh>
+        {/* 炎 */}
+        <mesh position={[0, 0.5, 0]}>
+          <coneGeometry args={[0.3, 0.8, 8]} />
+          <meshStandardMaterial
+            color="#ff4500"
+            emissive="#ff6600"
+            emissiveIntensity={2}
+            transparent
+            opacity={0.9}
+          />
+        </mesh>
+        <mesh position={[0.1, 0.4, 0.1]}>
+          <coneGeometry args={[0.2, 0.6, 8]} />
+          <meshStandardMaterial
+            color="#ff8c00"
+            emissive="#ffaa00"
+            emissiveIntensity={2}
+            transparent
+            opacity={0.8}
+          />
+        </mesh>
+        <mesh position={[-0.1, 0.35, -0.1]}>
+          <coneGeometry args={[0.15, 0.5, 8]} />
+          <meshStandardMaterial
+            color="#ffcc00"
+            emissive="#ffdd00"
+            emissiveIntensity={2}
+            transparent
+            opacity={0.7}
+          />
+        </mesh>
+        {/* 光源 */}
+        <pointLight
+          position={[0, 0.6, 0]}
+          color="#ff6633"
+          intensity={30}
+          distance={25}
+        />
+      </group>
+
+      {/* 壁（北） */}
+      <RigidBody type="fixed" colliders="cuboid" restitution={0} friction={0}>
+        <mesh position={[0, wallHeight / 2, -worldSize * 0.85]} castShadow>
+          <boxGeometry args={[wallThickness * 20, wallHeight, wallThickness]} />
+          <meshLambertMaterial color={COLORS.wall} />
+        </mesh>
+      </RigidBody>
+
+      {/* 壁（南） */}
+      <RigidBody type="fixed" colliders="cuboid" restitution={0} friction={0}>
+        <mesh position={[0, wallHeight / 2, worldSize * 0.85]} castShadow>
+          <boxGeometry args={[wallThickness * 20, wallHeight, wallThickness]} />
+          <meshLambertMaterial color={COLORS.wall} />
+        </mesh>
+      </RigidBody>
+
+      {/* 壁（東） */}
+      <RigidBody type="fixed" colliders="cuboid" restitution={0} friction={0}>
+        <mesh position={[worldSize * 0.85, wallHeight / 2, 0]} castShadow>
+          <boxGeometry args={[wallThickness, wallHeight, wallThickness * 20]} />
+          <meshLambertMaterial color={COLORS.wall} />
+        </mesh>
+      </RigidBody>
+
+      {/* 壁（西） */}
+      <RigidBody type="fixed" colliders="cuboid" restitution={0} friction={0}>
+        <mesh position={[-worldSize * 0.85, wallHeight / 2, 0]} castShadow>
+          <boxGeometry args={[wallThickness, wallHeight, wallThickness * 20]} />
+          <meshLambertMaterial color={COLORS.wall} />
+        </mesh>
+      </RigidBody>
+
+      {/* 細い道（南東方向） */}
+      <RigidBody type="fixed" colliders="cuboid" restitution={0} friction={0}>
+        <mesh
+          position={[worldSize * 0.95, -0.05, worldSize * 0.95]}
+          rotation={[-Math.PI / 2, 0, Math.PI / 4]}
+          receiveShadow
+        >
+          <planeGeometry args={[3, worldSize * 0.8]} />
+          <meshLambertMaterial color="#B5651D" />
+        </mesh>
+      </RigidBody>
+
+      {/* 道沿いの照明（左側） */}
+      <group position={[worldSize * 0.85 - 2, 0, worldSize * 0.85 + 2]}>
+        <mesh position={[0, 1.2, 0]}>
+          <cylinderGeometry args={[0.08, 0.08, 2.4]} />
+          <meshLambertMaterial color="#3a3a3a" />
+        </mesh>
+        <mesh position={[0, 2.6, 0]}>
+          <sphereGeometry args={[0.25, 16, 16]} />
+          <meshStandardMaterial
+            color="#ffffcc"
+            emissive="#ffeeaa"
+            emissiveIntensity={1}
+          />
+        </mesh>
+        <pointLight
+          position={[0, 2.6, 0]}
+          color="#ffeecc"
+          intensity={15}
+          distance={20}
+        />
+      </group>
+
+      {/* 道沿いの照明（右側） */}
+      <group position={[worldSize * 1.05 + 2, 0, worldSize * 1.05 - 2]}>
+        <mesh position={[0, 1.2, 0]}>
+          <cylinderGeometry args={[0.08, 0.08, 2.4]} />
+          <meshLambertMaterial color="#3a3a3a" />
+        </mesh>
+        <mesh position={[0, 2.6, 0]}>
+          <sphereGeometry args={[0.25, 16, 16]} />
+          <meshStandardMaterial
+            color="#ffffcc"
+            emissive="#ffeeaa"
+            emissiveIntensity={1}
+          />
+        </mesh>
+        <pointLight
+          position={[0, 2.6, 0]}
+          color="#ffeecc"
+          intensity={15}
+          distance={20}
+        />
+      </group>
+
+      {/* ランタン（北東）- 2本 */}
+      <group position={[worldSize * 0.45, 0, -worldSize * 0.75]}>
+        <mesh position={[0, 1.5, 0]} castShadow>
+          <cylinderGeometry args={[0.1, 0.1, 3]} />
+          <meshLambertMaterial color="#4a4a4a" />
+        </mesh>
+        <mesh position={[0, 3.2, 0]}>
+          <boxGeometry args={[0.4, 0.6, 0.4]} />
+          <meshStandardMaterial
+            color="#ffaa00"
+            emissive="#ff8800"
+            emissiveIntensity={0.5}
+          />
+        </mesh>
+        <pointLight
+          position={[0, 3.2, 0]}
+          color="#ffaa44"
+          intensity={10}
+          distance={15}
+        />
+      </group>
+      <group position={[worldSize * 0.75, 0, -worldSize * 0.45]}>
+        <mesh position={[0, 1.5, 0]} castShadow>
+          <cylinderGeometry args={[0.1, 0.1, 3]} />
+          <meshLambertMaterial color="#4a4a4a" />
+        </mesh>
+        <mesh position={[0, 3.2, 0]}>
+          <boxGeometry args={[0.4, 0.6, 0.4]} />
+          <meshStandardMaterial
+            color="#ffaa00"
+            emissive="#ff8800"
+            emissiveIntensity={0.5}
+          />
+        </mesh>
+        <pointLight
+          position={[0, 3.2, 0]}
+          color="#ffaa44"
+          intensity={10}
+          distance={15}
+        />
+      </group>
+
+      {/* ランタン（北西）- 2本 */}
+      <group position={[-worldSize * 0.45, 0, -worldSize * 0.75]}>
+        <mesh position={[0, 1.5, 0]} castShadow>
+          <cylinderGeometry args={[0.1, 0.1, 3]} />
+          <meshLambertMaterial color="#4a4a4a" />
+        </mesh>
+        <mesh position={[0, 3.2, 0]}>
+          <boxGeometry args={[0.4, 0.6, 0.4]} />
+          <meshStandardMaterial
+            color="#ffaa00"
+            emissive="#ff8800"
+            emissiveIntensity={0.5}
+          />
+        </mesh>
+        <pointLight
+          position={[0, 3.2, 0]}
+          color="#ffaa44"
+          intensity={10}
+          distance={15}
+        />
+      </group>
+      <group position={[-worldSize * 0.75, 0, -worldSize * 0.45]}>
+        <mesh position={[0, 1.5, 0]} castShadow>
+          <cylinderGeometry args={[0.1, 0.1, 3]} />
+          <meshLambertMaterial color="#4a4a4a" />
+        </mesh>
+        <mesh position={[0, 3.2, 0]}>
+          <boxGeometry args={[0.4, 0.6, 0.4]} />
+          <meshStandardMaterial
+            color="#ffaa00"
+            emissive="#ff8800"
+            emissiveIntensity={0.5}
+          />
+        </mesh>
+        <pointLight
+          position={[0, 3.2, 0]}
+          color="#ffaa44"
+          intensity={10}
+          distance={15}
+        />
+      </group>
+
+      {/* ランタン（南東）- 2本 */}
+      <group position={[worldSize * 0.45, 0, worldSize * 0.75]}>
+        <mesh position={[0, 1.5, 0]} castShadow>
+          <cylinderGeometry args={[0.1, 0.1, 3]} />
+          <meshLambertMaterial color="#4a4a4a" />
+        </mesh>
+        <mesh position={[0, 3.2, 0]}>
+          <boxGeometry args={[0.4, 0.6, 0.4]} />
+          <meshStandardMaterial
+            color="#ffaa00"
+            emissive="#ff8800"
+            emissiveIntensity={0.5}
+          />
+        </mesh>
+        <pointLight
+          position={[0, 3.2, 0]}
+          color="#ffaa44"
+          intensity={10}
+          distance={15}
+        />
+      </group>
+      <group position={[worldSize * 0.75, 0, worldSize * 0.45]}>
+        <mesh position={[0, 1.5, 0]} castShadow>
+          <cylinderGeometry args={[0.1, 0.1, 3]} />
+          <meshLambertMaterial color="#4a4a4a" />
+        </mesh>
+        <mesh position={[0, 3.2, 0]}>
+          <boxGeometry args={[0.4, 0.6, 0.4]} />
+          <meshStandardMaterial
+            color="#ffaa00"
+            emissive="#ff8800"
+            emissiveIntensity={0.5}
+          />
+        </mesh>
+        <pointLight
+          position={[0, 3.2, 0]}
+          color="#ffaa44"
+          intensity={10}
+          distance={15}
+        />
+      </group>
+
+      {/* ランタン（南西）- 2本 */}
+      <group position={[-worldSize * 0.45, 0, worldSize * 0.75]}>
+        <mesh position={[0, 1.5, 0]} castShadow>
+          <cylinderGeometry args={[0.1, 0.1, 3]} />
+          <meshLambertMaterial color="#4a4a4a" />
+        </mesh>
+        <mesh position={[0, 3.2, 0]}>
+          <boxGeometry args={[0.4, 0.6, 0.4]} />
+          <meshStandardMaterial
+            color="#ffaa00"
+            emissive="#ff8800"
+            emissiveIntensity={0.5}
+          />
+        </mesh>
+        <pointLight
+          position={[0, 3.2, 0]}
+          color="#ffaa44"
+          intensity={10}
+          distance={15}
+        />
+      </group>
+      <group position={[-worldSize * 0.75, 0, worldSize * 0.45]}>
+        <mesh position={[0, 1.5, 0]} castShadow>
+          <cylinderGeometry args={[0.1, 0.1, 3]} />
+          <meshLambertMaterial color="#4a4a4a" />
+        </mesh>
+        <mesh position={[0, 3.2, 0]}>
+          <boxGeometry args={[0.4, 0.6, 0.4]} />
+          <meshStandardMaterial
+            color="#ffaa00"
+            emissive="#ff8800"
+            emissiveIntensity={0.5}
+          />
+        </mesh>
+        <pointLight
+          position={[0, 3.2, 0]}
+          color="#ffaa44"
+          intensity={10}
+          distance={15}
+        />
+      </group>
+    </group>
+  );
+};

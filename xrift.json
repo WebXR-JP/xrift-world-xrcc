@@ -1,0 +1,27 @@
+{
+  "world": {
+    "distDir": "./dist",
+    "title": "XRift Creative Commons",
+    "description": "つくる・配信する・眺めるが、自然に混ざり合う創作の広場。",
+    "thumbnailPath": "thumbnail.png",
+    "buildCommand": "npm run build",
+    "ignore": [
+      "**/.DS_Store",
+      "**/Thumbs.db",
+      "**/*.js.map",
+      "**/.gitkeep",
+      "**/index.html",
+      "**/__federation_shared_@react-three/drei-*.js",
+      "**/__federation_shared_@react-three/fiber-*.js",
+      "**/__federation_shared_@react-three/rapier-*.js",
+      "**/__federation_shared_@xrift/world-components-*.js",
+      "**/__federation_shared_three-*.js",
+      "**/__federation_shared_react-*.js",
+      "**/__federation_shared_react-dom-*.js",
+      "**/__federation_shared_react-dom/client-*.js",
+      "**/__federation_shared_react/jsx-runtime-*.js",
+      "**/rapier.es-*.js",
+      "**/hls-*.js"
+    ]
+  }
+}
