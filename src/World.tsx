@@ -10,6 +10,7 @@ import { BackgroundAudio } from "./components/BackgroundAudio";
 import { Fire } from "./components/Fire";
 import { Ground } from "./components/Ground";
 import { GroundPlane } from "./components/GroundPlane";
+import { Lantern } from "./components/Lantern";
 import { Skybox } from "./components/Skybox";
 import { COLORS, WORLD_CONFIG } from "./constants";
 
@@ -239,10 +240,10 @@ export const World: React.FC<WorldProps> = ({
         {/* 光源 */}
         <pointLight
           position={[0, 0.6, 0]}
-          color="#5d1d08"
-          intensity={200}
+          color="#ffbba4"
+          intensity={10}
           distance={40}
-          decay={0.4}
+          decay={0.5}
           castShadow={false}
         />
       </group>
@@ -404,172 +405,20 @@ export const World: React.FC<WorldProps> = ({
       </group>
 
       {/* ランタン（北東）- 2本 */}
-      <group position={[worldSize * 0.45, 0, -worldSize * 0.75]}>
-        <mesh position={[0, 1.5, 0]} castShadow>
-          <cylinderGeometry args={[0.1, 0.1, 3]} />
-          <meshLambertMaterial color="#4a4a4a" />
-        </mesh>
-        <mesh position={[0, 3.2, 0]}>
-          <boxGeometry args={[0.4, 0.6, 0.4]} />
-          <meshStandardMaterial
-            color="#ffaa00"
-            emissive="#ff8800"
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-        <pointLight
-          position={[0, 3.2, 0]}
-          color="#ffaa44"
-          intensity={10}
-          distance={15}
-        />
-      </group>
-      <group position={[worldSize * 0.75, 0, -worldSize * 0.45]}>
-        <mesh position={[0, 1.5, 0]} castShadow>
-          <cylinderGeometry args={[0.1, 0.1, 3]} />
-          <meshLambertMaterial color="#4a4a4a" />
-        </mesh>
-        <mesh position={[0, 3.2, 0]}>
-          <boxGeometry args={[0.4, 0.6, 0.4]} />
-          <meshStandardMaterial
-            color="#ffaa00"
-            emissive="#ff8800"
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-        <pointLight
-          position={[0, 3.2, 0]}
-          color="#ffaa44"
-          intensity={10}
-          distance={15}
-        />
-      </group>
+      <Lantern position={[worldSize * 0.45, 0, -worldSize * 0.75]} />
+      <Lantern position={[worldSize * 0.75, 0, -worldSize * 0.45]} />
 
       {/* ランタン（北西）- 2本 */}
-      <group position={[-worldSize * 0.45, 0, -worldSize * 0.75]}>
-        <mesh position={[0, 1.5, 0]} castShadow>
-          <cylinderGeometry args={[0.1, 0.1, 3]} />
-          <meshLambertMaterial color="#4a4a4a" />
-        </mesh>
-        <mesh position={[0, 3.2, 0]}>
-          <boxGeometry args={[0.4, 0.6, 0.4]} />
-          <meshStandardMaterial
-            color="#ffaa00"
-            emissive="#ff8800"
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-        <pointLight
-          position={[0, 3.2, 0]}
-          color="#ffaa44"
-          intensity={10}
-          distance={15}
-        />
-      </group>
-      <group position={[-worldSize * 0.75, 0, -worldSize * 0.45]}>
-        <mesh position={[0, 1.5, 0]} castShadow>
-          <cylinderGeometry args={[0.1, 0.1, 3]} />
-          <meshLambertMaterial color="#4a4a4a" />
-        </mesh>
-        <mesh position={[0, 3.2, 0]}>
-          <boxGeometry args={[0.4, 0.6, 0.4]} />
-          <meshStandardMaterial
-            color="#ffaa00"
-            emissive="#ff8800"
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-        <pointLight
-          position={[0, 3.2, 0]}
-          color="#ffaa44"
-          intensity={10}
-          distance={15}
-        />
-      </group>
+      <Lantern position={[-worldSize * 0.45, 0, -worldSize * 0.75]} />
+      <Lantern position={[-worldSize * 0.75, 0, -worldSize * 0.45]} />
 
       {/* ランタン（南東）- 2本 */}
-      <group position={[worldSize * 0.45, 0, worldSize * 0.75]}>
-        <mesh position={[0, 1.5, 0]} castShadow>
-          <cylinderGeometry args={[0.1, 0.1, 3]} />
-          <meshLambertMaterial color="#4a4a4a" />
-        </mesh>
-        <mesh position={[0, 3.2, 0]}>
-          <boxGeometry args={[0.4, 0.6, 0.4]} />
-          <meshStandardMaterial
-            color="#ffaa00"
-            emissive="#ff8800"
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-        <pointLight
-          position={[0, 3.2, 0]}
-          color="#ffaa44"
-          intensity={10}
-          distance={15}
-        />
-      </group>
-      <group position={[worldSize * 0.75, 0, worldSize * 0.45]}>
-        <mesh position={[0, 1.5, 0]} castShadow>
-          <cylinderGeometry args={[0.1, 0.1, 3]} />
-          <meshLambertMaterial color="#4a4a4a" />
-        </mesh>
-        <mesh position={[0, 3.2, 0]}>
-          <boxGeometry args={[0.4, 0.6, 0.4]} />
-          <meshStandardMaterial
-            color="#ffaa00"
-            emissive="#ff8800"
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-        <pointLight
-          position={[0, 3.2, 0]}
-          color="#ffaa44"
-          intensity={10}
-          distance={15}
-        />
-      </group>
+      <Lantern position={[worldSize * 0.45, 0, worldSize * 0.75]} />
+      <Lantern position={[worldSize * 0.75, 0, worldSize * 0.45]} />
 
       {/* ランタン（南西）- 2本 */}
-      <group position={[-worldSize * 0.45, 0, worldSize * 0.75]}>
-        <mesh position={[0, 1.5, 0]} castShadow>
-          <cylinderGeometry args={[0.1, 0.1, 3]} />
-          <meshLambertMaterial color="#4a4a4a" />
-        </mesh>
-        <mesh position={[0, 3.2, 0]}>
-          <boxGeometry args={[0.4, 0.6, 0.4]} />
-          <meshStandardMaterial
-            color="#ffaa00"
-            emissive="#ff8800"
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-        <pointLight
-          position={[0, 3.2, 0]}
-          color="#ffaa44"
-          intensity={10}
-          distance={15}
-        />
-      </group>
-      <group position={[-worldSize * 0.75, 0, worldSize * 0.45]}>
-        <mesh position={[0, 1.5, 0]} castShadow>
-          <cylinderGeometry args={[0.1, 0.1, 3]} />
-          <meshLambertMaterial color="#4a4a4a" />
-        </mesh>
-        <mesh position={[0, 3.2, 0]}>
-          <boxGeometry args={[0.4, 0.6, 0.4]} />
-          <meshStandardMaterial
-            color="#ffaa00"
-            emissive="#ff8800"
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-        <pointLight
-          position={[0, 3.2, 0]}
-          color="#ffaa44"
-          intensity={10}
-          distance={15}
-        />
-      </group>
+      <Lantern position={[-worldSize * 0.45, 0, worldSize * 0.75]} />
+      <Lantern position={[-worldSize * 0.75, 0, worldSize * 0.45]} />
     </group>
   );
 };

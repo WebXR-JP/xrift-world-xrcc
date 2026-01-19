@@ -20,25 +20,67 @@ export const BackgroundAudio: React.FC<BackgroundAudioProps> = ({
 }) => {
   const { baseUrl } = useXRift()
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const gainNodeRef = useRef<GainNode | null>(null)
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null)
 
   useEffect(() => {
     const audio = new Audio(`${baseUrl}${src}`)
     audio.loop = loop
-    audio.volume = volume
+    audio.crossOrigin = 'anonymous'
     audioRef.current = audio
 
-    if (autoPlay) {
-      // ユーザーインタラクション後に再生を試みる
-      const playAudio = () => {
-        audio.play().catch(() => {
-          // 自動再生がブロックされた場合、クリック時に再生
-          const handleClick = () => {
-            audio.play()
-            document.removeEventListener('click', handleClick)
+    const setupAudioContext = () => {
+      if (audioContextRef.current) return
+
+      // Web Audio API を使用（iOS対応）
+      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+      const audioContext = new AudioContextClass()
+      audioContextRef.current = audioContext
+
+      // GainNode で音量制御
+      const gainNode = audioContext.createGain()
+      gainNode.gain.value = volume
+      gainNodeRef.current = gainNode
+
+      // Audio要素をソースとして接続
+      const source = audioContext.createMediaElementSource(audio)
+      sourceRef.current = source
+
+      // 接続: source -> gain -> destination
+      source.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+    }
+
+    const playAudio = async () => {
+      try {
+        setupAudioContext()
+
+        // AudioContext が suspended の場合は resume
+        if (audioContextRef.current?.state === 'suspended') {
+          await audioContextRef.current.resume()
+        }
+
+        await audio.play()
+      } catch {
+        // 自動再生がブロックされた場合、クリック/タッチ時に再生
+        const handleInteraction = async () => {
+          setupAudioContext()
+
+          if (audioContextRef.current?.state === 'suspended') {
+            await audioContextRef.current.resume()
           }
-          document.addEventListener('click', handleClick)
-        })
+
+          audio.play()
+          document.removeEventListener('click', handleInteraction)
+          document.removeEventListener('touchstart', handleInteraction)
+        }
+        document.addEventListener('click', handleInteraction)
+        document.addEventListener('touchstart', handleInteraction)
       }
+    }
+
+    if (autoPlay) {
       playAudio()
     }
 
@@ -46,12 +88,20 @@ export const BackgroundAudio: React.FC<BackgroundAudioProps> = ({
       audio.pause()
       audio.src = ''
       audioRef.current = null
-    }
-  }, [baseUrl, src, loop, volume, autoPlay])
 
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+        audioContextRef.current = null
+      }
+      gainNodeRef.current = null
+      sourceRef.current = null
+    }
+  }, [baseUrl, src, loop, autoPlay, volume])
+
+  // 音量変更時の処理
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume
+    if (gainNodeRef.current) {
+      gainNodeRef.current.gain.value = volume
     }
   }, [volume])
 
