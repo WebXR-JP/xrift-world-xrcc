@@ -5,9 +5,11 @@ import {
 } from "@xrift/world-components";
 import { RigidBody } from "@react-three/rapier";
 import { Instances, Instance } from "@react-three/drei";
-import { useRef, useMemo } from "react";
-import { Mesh } from "three";
+import { useMemo } from "react";
+import { BackgroundAudio } from "./components/BackgroundAudio";
 import { Fire } from "./components/Fire";
+import { Ground } from "./components/Ground";
+import { GroundPlane } from "./components/GroundPlane";
 import { Skybox } from "./components/Skybox";
 import { COLORS, WORLD_CONFIG } from "./constants";
 
@@ -104,7 +106,6 @@ export const World: React.FC<WorldProps> = ({
   position = [0, 0, 0],
   scale = 1,
 }) => {
-  const groundRef = useRef<Mesh>(null);
   const worldSize = WORLD_CONFIG.size * scale;
   const wallHeight = WORLD_CONFIG.wallHeight * scale;
   const wallThickness = WORLD_CONFIG.wallThickness * scale;
@@ -126,6 +127,9 @@ export const World: React.FC<WorldProps> = ({
       {/* Skybox - 360度パノラマ背景 */}
       <Skybox radius={500} />
 
+      {/* BGM - 虫の鳴き声 */}
+      <BackgroundAudio src="insects_sing_in_fall.mp3" volume={0.01} loop />
+
       {/* プレイヤーのスポーン地点（小道の先） */}
       <group position={[worldSize * 1.1, 0, worldSize * 1.1]}>
         <SpawnPoint yaw={45} />
@@ -136,14 +140,13 @@ export const World: React.FC<WorldProps> = ({
 
       {/* 地面（緑・大） */}
       <RigidBody type="fixed" colliders="trimesh" restitution={0} friction={0}>
-        <mesh
-          rotation={[-Math.PI / 2, 0, 0]}
+        <Ground
+          radius={worldSize * 2}
+          color="#4a8f3c"
           position={[0, -0.1, 0]}
-          receiveShadow
-        >
-          <circleGeometry args={[worldSize * 2, 64]} />
-          <meshLambertMaterial color="#4a8f3c" />
-        </mesh>
+          noiseScale={0.3}
+          noiseIntensity={0.5}
+        />
       </RigidBody>
 
       {/* 木（インスタンシング） */}
@@ -203,15 +206,13 @@ export const World: React.FC<WorldProps> = ({
 
       {/* 地面（レンガ色・円形） */}
       <RigidBody type="fixed" colliders="trimesh" restitution={0} friction={0}>
-        <mesh
-          ref={groundRef}
-          rotation={[-Math.PI / 2, 0, 0]}
+        <Ground
+          radius={worldSize}
+          color="#B5651D"
           position={[0, 0, 0]}
-          receiveShadow
-        >
-          <circleGeometry args={[worldSize, 64]} />
-          <meshLambertMaterial color="#B5651D" />
-        </mesh>
+          noiseScale={0.8}
+          noiseIntensity={0.4}
+        />
       </RigidBody>
 
       {/* たき火（中央） */}
@@ -241,7 +242,7 @@ export const World: React.FC<WorldProps> = ({
           color="#5d1d08"
           intensity={200}
           distance={40}
-          decay={0.6}
+          decay={0.4}
           castShadow={false}
         />
       </group>
@@ -347,14 +348,15 @@ export const World: React.FC<WorldProps> = ({
 
       {/* 細い道（南東方向） */}
       <RigidBody type="fixed" colliders="cuboid" restitution={0} friction={0}>
-        <mesh
+        <GroundPlane
+          width={3}
+          height={worldSize * 0.8}
+          color="#B5651D"
           position={[worldSize * 0.95, -0.05, worldSize * 0.95]}
           rotation={[-Math.PI / 2, 0, Math.PI / 4]}
-          receiveShadow
-        >
-          <planeGeometry args={[3, worldSize * 0.8]} />
-          <meshLambertMaterial color="#B5651D" />
-        </mesh>
+          noiseScale={0.8}
+          noiseIntensity={0.4}
+        />
       </RigidBody>
 
       {/* 道沿いの照明（左側） */}
