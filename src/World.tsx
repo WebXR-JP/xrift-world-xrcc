@@ -3,6 +3,7 @@ import { RigidBody } from "@react-three/rapier";
 import { Instances, Instance } from "@react-three/drei";
 import { useRef, useMemo } from "react";
 import { Mesh } from "three";
+import { Fire } from "./components/Fire";
 import { Skybox } from "./components/Skybox";
 import { COLORS, WORLD_CONFIG } from "./constants";
 
@@ -228,37 +229,8 @@ export const World: React.FC<WorldProps> = ({
           <cylinderGeometry args={[0.08, 0.1, 0.8]} />
           <meshLambertMaterial color="#4a3728" />
         </mesh>
-        {/* 炎 */}
-        <mesh position={[0, 0.5, 0]}>
-          <coneGeometry args={[0.3, 0.8, 8]} />
-          <meshStandardMaterial
-            color="#ff4500"
-            emissive="#ff6600"
-            emissiveIntensity={2}
-            transparent
-            opacity={0.9}
-          />
-        </mesh>
-        <mesh position={[0.1, 0.4, 0.1]}>
-          <coneGeometry args={[0.2, 0.6, 8]} />
-          <meshStandardMaterial
-            color="#ff8c00"
-            emissive="#ffaa00"
-            emissiveIntensity={2}
-            transparent
-            opacity={0.8}
-          />
-        </mesh>
-        <mesh position={[-0.1, 0.35, -0.1]}>
-          <coneGeometry args={[0.15, 0.5, 8]} />
-          <meshStandardMaterial
-            color="#ffcc00"
-            emissive="#ffdd00"
-            emissiveIntensity={2}
-            transparent
-            opacity={0.7}
-          />
-        </mesh>
+        {/* 炎（シェーダー） */}
+        <Fire scale={1.8} />
         {/* 光源 */}
         <pointLight
           position={[0, 0.6, 0]}
