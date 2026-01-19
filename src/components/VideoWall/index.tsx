@@ -15,6 +15,13 @@ export interface VideoWallProps {
   videoHeight?: number
 }
 
+interface WallConfig {
+  wallPosition: [number, number, number]
+  wallSize: [number, number, number]
+  videoPosition: [number, number, number]
+  videoRotation: [number, number, number]
+}
+
 const getWallConfig = (
   direction: 'north' | 'south' | 'east' | 'west',
   distance: number,
@@ -23,71 +30,36 @@ const getWallConfig = (
   wallThickness: number,
   videoOffset: number,
   videoHeight: number,
-) => {
+): WallConfig => {
   switch (direction) {
     case 'north':
       return {
-        wallPosition: [0, wallHeight / 2, -distance] as [number, number, number],
-        wallSize: [wallWidth, wallHeight, wallThickness] as [
-          number,
-          number,
-          number,
-        ],
-        videoPosition: [0, videoHeight, -distance + videoOffset] as [
-          number,
-          number,
-          number,
-        ],
-        videoRotation: [0, 0, 0] as [number, number, number],
+        wallPosition: [0, wallHeight / 2, -distance],
+        wallSize: [wallWidth, wallHeight, wallThickness],
+        videoPosition: [0, videoHeight, -distance + videoOffset],
+        videoRotation: [0, 0, 0],
       }
     case 'south':
       return {
-        wallPosition: [0, wallHeight / 2, distance] as [number, number, number],
-        wallSize: [wallWidth, wallHeight, wallThickness] as [
-          number,
-          number,
-          number,
-        ],
-        videoPosition: [0, videoHeight, distance - videoOffset] as [
-          number,
-          number,
-          number,
-        ],
-        videoRotation: [0, Math.PI, 0] as [number, number, number],
+        wallPosition: [0, wallHeight / 2, distance],
+        wallSize: [wallWidth, wallHeight, wallThickness],
+        videoPosition: [0, videoHeight, distance - videoOffset],
+        videoRotation: [0, Math.PI, 0],
       }
     case 'east':
       return {
-        wallPosition: [distance, wallHeight / 2, 0] as [number, number, number],
-        wallSize: [wallThickness, wallHeight, wallWidth] as [
-          number,
-          number,
-          number,
-        ],
-        videoPosition: [distance - videoOffset, videoHeight, 0] as [
-          number,
-          number,
-          number,
-        ],
-        videoRotation: [0, -Math.PI / 2, 0] as [number, number, number],
+        wallPosition: [distance, wallHeight / 2, 0],
+        wallSize: [wallThickness, wallHeight, wallWidth],
+        videoPosition: [distance - videoOffset, videoHeight, 0],
+        videoRotation: [0, -Math.PI / 2, 0],
       }
     case 'west':
+    default:
       return {
-        wallPosition: [-distance, wallHeight / 2, 0] as [
-          number,
-          number,
-          number,
-        ],
-        wallSize: [wallThickness, wallHeight, wallWidth] as [
-          number,
-          number,
-          number,
-        ],
-        videoPosition: [-distance + videoOffset, videoHeight, 0] as [
-          number,
-          number,
-          number,
-        ],
-        videoRotation: [0, Math.PI / 2, 0] as [number, number, number],
+        wallPosition: [-distance, wallHeight / 2, 0],
+        wallSize: [wallThickness, wallHeight, wallWidth],
+        videoPosition: [-distance + videoOffset, videoHeight, 0],
+        videoRotation: [0, Math.PI / 2, 0],
       }
   }
 }
