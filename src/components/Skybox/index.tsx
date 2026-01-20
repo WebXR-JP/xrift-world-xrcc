@@ -41,7 +41,7 @@ const fragmentShader = `
     float h = hash(id);
 
     // 星の出現確率
-    if (h > 0.97) {
+    if (h > 0.94) {
       // 星の位置をセル内でランダムに
       vec2 starPos = vec2(hash(id + 0.1), hash(id + 0.2));
       float d = length(f - starPos);
