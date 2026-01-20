@@ -1,6 +1,10 @@
 import { SpawnPoint } from "@xrift/world-components";
 import { RigidBody } from "@react-three/rapier";
-import { EffectComposer, Bloom, ToneMapping } from "@react-three/postprocessing";
+import {
+  EffectComposer,
+  Bloom,
+  ToneMapping,
+} from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import { BackgroundAudio } from "./components/BackgroundAudio";
 import { Bonfire } from "./components/Bonfire";

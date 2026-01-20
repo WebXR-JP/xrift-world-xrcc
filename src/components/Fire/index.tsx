@@ -1,7 +1,6 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Billboard } from '@react-three/drei'
-import { ShaderMaterial, AdditiveBlending } from 'three'
+import { ShaderMaterial, AdditiveBlending, Mesh } from 'three'
 
 export interface FireProps {
   position?: [number, number, number]
@@ -122,6 +121,7 @@ const fragmentShader = `
 
 export const Fire: React.FC<FireProps> = ({ position = [0, 0, 0], scale = 1 }) => {
   const materialRef = useRef<ShaderMaterial>(null)
+  const meshRef = useRef<Mesh>(null)
 
   const uniforms = useMemo(
     () => ({
@@ -131,28 +131,34 @@ export const Fire: React.FC<FireProps> = ({ position = [0, 0, 0], scale = 1 }) =
     []
   )
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     if (materialRef.current) {
       materialRef.current.uniforms.uTime.value += delta
+    }
+    // Y軸のみのビルボード
+    if (meshRef.current) {
+      const camera = state.camera
+      const mesh = meshRef.current
+      const dx = camera.position.x - mesh.getWorldPosition(mesh.position.clone()).x
+      const dz = camera.position.z - mesh.getWorldPosition(mesh.position.clone()).z
+      mesh.rotation.y = Math.atan2(dx, dz)
     }
   })
 
   return (
     <group position={position} scale={scale}>
-      <Billboard position={[0, 0.6, 0]}>
-        <mesh>
-          <planeGeometry args={[1, 1.5, 32, 32]} />
-          <shaderMaterial
-            ref={materialRef}
-            vertexShader={vertexShader}
-            fragmentShader={fragmentShader}
-            uniforms={uniforms}
-            transparent
-            blending={AdditiveBlending}
-            depthWrite={false}
-          />
-        </mesh>
-      </Billboard>
+      <mesh ref={meshRef} position={[0, 0.6, 0]}>
+        <planeGeometry args={[1, 1.5, 32, 32]} />
+        <shaderMaterial
+          ref={materialRef}
+          vertexShader={vertexShader}
+          fragmentShader={fragmentShader}
+          uniforms={uniforms}
+          transparent
+          blending={AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
     </group>
   )
 }

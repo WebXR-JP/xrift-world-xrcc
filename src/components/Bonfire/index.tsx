@@ -1,3 +1,6 @@
+import { useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import { PointLight } from "three";
 import { Fire } from "../Fire";
 
 export interface BonfireProps {
@@ -9,6 +12,20 @@ export const Bonfire: React.FC<BonfireProps> = ({
   position = [0, 0, 0],
   scale = 1,
 }) => {
+  const lightRef = useRef<PointLight>(null);
+
+  useFrame((state) => {
+    if (lightRef.current) {
+      const t = state.clock.elapsedTime;
+      // 複数の sin を重ねて自然なゆらぎを作る
+      const flicker =
+        Math.sin(t * 3.0) * 0.3 +
+        Math.sin(t * 7.0) * 0.2 +
+        Math.sin(t * 13.0) * 0.1;
+      lightRef.current.intensity = 5 + flicker * 0.8;
+    }
+  });
+
   return (
     <group position={position} scale={scale}>
       {/* 薪 */}
@@ -32,6 +49,7 @@ export const Bonfire: React.FC<BonfireProps> = ({
       <Fire scale={1.8} />
       {/* 光源 */}
       <pointLight
+        ref={lightRef}
         position={[0, 0.6, 0]}
         color="#ffbba4"
         intensity={5}

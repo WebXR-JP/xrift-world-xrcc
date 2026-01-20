@@ -20,39 +20,37 @@ const fragmentShader = `
   varying vec3 vWorldPosition;
   uniform float uTime;
 
-  // 疑似乱数生成
-  float hash(vec3 p) {
-    p = fract(p * 0.3183099 + .1);
-    p *= 17.0;
-    return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+  // 疑似乱数生成（簡略版）
+  float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
   }
 
-  // 星を生成
+  // 星を生成（簡略版 - ループなし）
   float stars(vec3 direction) {
-    vec3 p = direction * 200.0;
-    vec3 id = floor(p);
-    vec3 f = fract(p);
+    // 球面座標に変換
+    vec2 uv = vec2(
+      atan(direction.z, direction.x) / 6.2832 + 0.5,
+      asin(direction.y) / 3.1416 + 0.5
+    );
 
-    float star = 0.0;
-    for(int x = -1; x <= 1; x++) {
-      for(int y = -1; y <= 1; y++) {
-        for(int z = -1; z <= 1; z++) {
-          vec3 neighbor = vec3(float(x), float(y), float(z));
-          vec3 cellId = id + neighbor;
-          float h = hash(cellId);
+    // グリッドに分割
+    vec2 grid = uv * 150.0;
+    vec2 id = floor(grid);
+    vec2 f = fract(grid);
 
-          if(h > 0.985) {
-            vec3 starPos = neighbor + vec3(hash(cellId + 1.0), hash(cellId + 2.0), hash(cellId + 3.0)) - f;
-            float d = length(starPos);
-            float brightness = 1.0 - smoothstep(0.0, 0.75, d);
-            // 瞬き
-            float twinkle = 0.7 + 0.3 * sin(uTime * 2.0 + h * 100.0);
-            star += brightness * twinkle * (0.5 + h * 0.5);
-          }
-        }
-      }
+    float h = hash(id);
+
+    // 星の出現確率
+    if (h > 0.97) {
+      // 星の位置をセル内でランダムに
+      vec2 starPos = vec2(hash(id + 0.1), hash(id + 0.2));
+      float d = length(f - starPos);
+      float brightness = 1.0 - smoothstep(0.0, 0.07, d);
+      // 簡易瞬き
+      float twinkle = 0.8 + 0.2 * sin(uTime * 2.0 + h * 50.0);
+      return brightness * twinkle;
     }
-    return star;
+    return 0.0;
   }
 
   void main() {
