@@ -56,19 +56,15 @@ const fragmentShader = `
   void main() {
     vec3 direction = normalize(vWorldPosition);
 
-    // 空のグラデーション（下から上へ）
-    float y = direction.y * 0.5 + 0.5;
-    vec3 horizonColor = vec3(0.55, 0.6, 0.7);   // 地平線近くの白みがかった青（さらに白く）
-    vec3 midColor = vec3(0.15, 0.22, 0.4);      // 中間の青
-    vec3 topColor = vec3(0.02, 0.04, 0.12);     // 天頂の深い青
+    // 空のグラデーション（地平線から天頂へ）
+    // direction.y: -1(下) → 0(地平線) → 1(上)
+    float height = max(direction.y + 0.1, 0.0);  // 地平線より少し下を基準に
+    vec3 horizonColor = vec3(0.55, 0.6, 0.7);   // 地平線（最も明るい）
+    vec3 topColor = vec3(0.02, 0.04, 0.12);     // 天頂（最も暗い）
 
-    // 地平線→中間→天頂の3段階グラデーション（白い領域をさらに広く）
-    vec3 skyColor;
-    if (y < 0.55) {
-      skyColor = mix(horizonColor, midColor, y / 0.55);
-    } else {
-      skyColor = mix(midColor, topColor, (y - 0.55) / 0.45);
-    }
+    // pow で地平線近くの明るい領域を広く保ちつつ天頂に向かって暗くする
+    float gradient = pow(height, 0.5);
+    vec3 skyColor = mix(horizonColor, topColor, gradient);
 
     // 星を追加
     float starField = stars(direction);
