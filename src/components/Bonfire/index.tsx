@@ -1,8 +1,8 @@
-import { Fire } from '../Fire'
+import { Fire } from "../Fire";
 
 export interface BonfireProps {
-  position?: [number, number, number]
-  scale?: number
+  position?: [number, number, number];
+  scale?: number;
 }
 
 export const Bonfire: React.FC<BonfireProps> = ({
@@ -34,11 +34,11 @@ export const Bonfire: React.FC<BonfireProps> = ({
       <pointLight
         position={[0, 0.6, 0]}
         color="#ffbba4"
-        intensity={10}
-        distance={40}
-        decay={0.5}
+        intensity={5}
+        distance={50}
+        decay={0.4}
         castShadow={false}
       />
     </group>
-  )
-}
+  );
+};

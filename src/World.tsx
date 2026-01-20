@@ -1,28 +1,30 @@
-import { SpawnPoint } from '@xrift/world-components'
-import { RigidBody } from '@react-three/rapier'
-import { BackgroundAudio } from './components/BackgroundAudio'
-import { Bonfire } from './components/Bonfire'
-import { Grass } from './components/Grass'
-import { Ground } from './components/Ground'
-import { GroundPlane } from './components/GroundPlane'
-import { Lantern } from './components/Lantern'
-import { Skybox } from './components/Skybox'
-import { StreetLight } from './components/StreetLight'
-import { Trees } from './components/Trees'
-import { VideoWall } from './components/VideoWall'
-import { WoodenSignboard } from './components/WoodenSignboard'
-import { COLORS, WORLD_CONFIG } from './constants'
+import { SpawnPoint } from "@xrift/world-components";
+import { RigidBody } from "@react-three/rapier";
+import { EffectComposer, Bloom, ToneMapping } from "@react-three/postprocessing";
+import { ToneMappingMode } from "postprocessing";
+import { BackgroundAudio } from "./components/BackgroundAudio";
+import { Bonfire } from "./components/Bonfire";
+import { Grass } from "./components/Grass";
+import { Ground } from "./components/Ground";
+import { GroundPlane } from "./components/GroundPlane";
+import { Lantern } from "./components/Lantern";
+import { Skybox } from "./components/Skybox";
+import { StreetLight } from "./components/StreetLight";
+import { Trees } from "./components/Trees";
+import { VideoWall } from "./components/VideoWall";
+import { WoodenSignboard } from "./components/WoodenSignboard";
+import { COLORS, WORLD_CONFIG } from "./constants";
 
 export interface WorldProps {
-  position?: [number, number, number]
-  scale?: number
+  position?: [number, number, number];
+  scale?: number;
 }
 
 export const World: React.FC<WorldProps> = ({
   position = [0, 0, 0],
   scale = 1,
 }) => {
-  const worldSize = WORLD_CONFIG.size * scale
+  const worldSize = WORLD_CONFIG.size * scale;
 
   return (
     <group position={position} scale={scale}>
@@ -38,7 +40,7 @@ export const World: React.FC<WorldProps> = ({
       </group>
 
       {/* 照明設定 */}
-      <ambientLight intensity={0.4} color="#d0d0d0" />
+      {/* <ambientLight intensity={0.1} color="#d0d0d0" /> */}
 
       {/* 地面（緑・大） */}
       <RigidBody type="fixed" colliders="trimesh" restitution={0} friction={0}>
@@ -87,10 +89,29 @@ export const World: React.FC<WorldProps> = ({
       />
 
       {/* 壁 + VideoPlayer */}
-      <VideoWall id="video-north" position={[0, 0, -worldSize * 0.85]} color={COLORS.wall} />
-      <VideoWall id="video-south" position={[0, 0, worldSize * 0.85]} rotation={[0, Math.PI, 0]} color={COLORS.wall} />
-      <VideoWall id="video-east" position={[worldSize * 0.85, 0, 0]} rotation={[0, -Math.PI / 2, 0]} color={COLORS.wall} />
-      <VideoWall id="video-west" position={[-worldSize * 0.85, 0, 0]} rotation={[0, Math.PI / 2, 0]} color={COLORS.wall} />
+      <VideoWall
+        id="video-north"
+        position={[0, 0, -worldSize * 0.85]}
+        color={COLORS.wall}
+      />
+      <VideoWall
+        id="video-south"
+        position={[0, 0, worldSize * 0.85]}
+        rotation={[0, Math.PI, 0]}
+        color={COLORS.wall}
+      />
+      <VideoWall
+        id="video-east"
+        position={[worldSize * 0.85, 0, 0]}
+        rotation={[0, -Math.PI / 2, 0]}
+        color={COLORS.wall}
+      />
+      <VideoWall
+        id="video-west"
+        position={[-worldSize * 0.85, 0, 0]}
+        rotation={[0, Math.PI / 2, 0]}
+        color={COLORS.wall}
+      />
 
       {/* 細い道（南東方向） */}
       <RigidBody type="fixed" colliders="cuboid" restitution={0} friction={0}>
@@ -124,6 +145,18 @@ export const World: React.FC<WorldProps> = ({
       {/* ランタン（南西） */}
       <Lantern position={[-worldSize * 0.45, 0, worldSize * 0.75]} />
       <Lantern position={[-worldSize * 0.75, 0, worldSize * 0.45]} />
+
+      {/* Bloom エフェクト（軽量設定） */}
+      <EffectComposer>
+        <Bloom
+          intensity={2.0}
+          luminanceThreshold={1.2}
+          luminanceSmoothing={0.2}
+          mipmapBlur
+          levels={3}
+        />
+        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+      </EffectComposer>
     </group>
-  )
-}
+  );
+};

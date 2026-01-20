@@ -13,7 +13,7 @@ export const Lantern: React.FC<LanternProps> = ({ position = [0, 0, 0] }) => {
       {/* ランタン本体 */}
       <mesh position={[0, 3.2, 0]}>
         <boxGeometry args={[0.4, 0.6, 0.4]} />
-        <meshBasicMaterial color="#ffaa00" />
+        <meshBasicMaterial color={[2, 1.2, 0]} toneMapped={false} />
       </mesh>
       {/* 光源 */}
       <pointLight

@@ -18,7 +18,8 @@ export const StreetLight: React.FC<StreetLightProps> = ({
         <meshStandardMaterial
           color="#ffffcc"
           emissive="#ffeeaa"
-          emissiveIntensity={1}
+          emissiveIntensity={2}
+          toneMapped={false}
         />
       </mesh>
       {/* 光源 */}
