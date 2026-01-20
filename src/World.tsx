@@ -1,4 +1,8 @@
-import { SpawnPoint } from "@xrift/world-components";
+import {
+  SpawnPoint,
+  ScreenShareDisplay,
+  TagBoard,
+} from "@xrift/world-components";
 import { RigidBody } from "@react-three/rapier";
 import {
   EffectComposer,
@@ -43,9 +47,6 @@ export const World: React.FC<WorldProps> = ({
         <SpawnPoint yaw={45} />
       </group>
 
-      {/* 照明設定 */}
-      {/* <ambientLight intensity={0.1} color="#d0d0d0" /> */}
-
       {/* 地面（緑・大） */}
       <RigidBody type="fixed" colliders="trimesh" restitution={0} friction={0}>
         <Ground
@@ -86,11 +87,9 @@ export const World: React.FC<WorldProps> = ({
       <Bonfire />
 
       {/* 木の看板（画面共有用） */}
-      <WoodenSignboard
-        id="screen-share-board"
-        position={[-5, 0, -5]}
-        rotation={[0, Math.PI / 4, 0]}
-      />
+      <WoodenSignboard position={[-5, 0, -5]} rotation={[0, Math.PI / 4, 0]}>
+        <ScreenShareDisplay id="screen-share-board" width={4.5} />
+      </WoodenSignboard>
 
       {/* 壁 + VideoPlayer */}
       <VideoWall
@@ -129,6 +128,14 @@ export const World: React.FC<WorldProps> = ({
           noiseIntensity={0.4}
         />
       </RigidBody>
+
+      {/* 入口の看板（TagBoard） */}
+      <WoodenSignboard
+        position={[worldSize * 1.05 - 2, 0, worldSize * 1.05 + 2]}
+        rotation={[0, Math.PI * 0.75, 0]}
+      >
+        <TagBoard instanceStateKey="entrance-tagboard" position={[0, 0, 0]} />
+      </WoodenSignboard>
 
       {/* 道沿いの照明 */}
       <StreetLight position={[worldSize * 0.85 - 2, 0, worldSize * 0.85 + 2]} />

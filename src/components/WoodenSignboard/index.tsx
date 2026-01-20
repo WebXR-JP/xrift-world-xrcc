@@ -1,17 +1,13 @@
-import { ScreenShareDisplay } from '@xrift/world-components'
-
 export interface WoodenSignboardProps {
-  id: string
-  position?: [number, number, number]
-  rotation?: [number, number, number]
-  displayWidth?: number
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+  children?: React.ReactNode;
 }
 
 export const WoodenSignboard: React.FC<WoodenSignboardProps> = ({
-  id,
   position = [0, 0, 0],
   rotation = [0, 0, 0],
-  displayWidth = 4.5,
+  children,
 }) => {
   return (
     <group position={position} rotation={rotation}>
@@ -35,13 +31,8 @@ export const WoodenSignboard: React.FC<WoodenSignboardProps> = ({
         <boxGeometry args={[3, 2, 0.1]} />
         <meshLambertMaterial color="#8B4513" />
       </mesh>
-      {/* 画面共有ディスプレイ */}
-      <ScreenShareDisplay
-        id={id}
-        position={[0, 2, 0.26]}
-        rotation={[0, 0, 0]}
-        width={displayWidth}
-      />
+      {/* コンテンツ表示エリア */}
+      <group position={[0, 2, 0.3]}>{children}</group>
     </group>
-  )
-}
+  );
+};
