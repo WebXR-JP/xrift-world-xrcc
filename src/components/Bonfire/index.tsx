@@ -51,10 +51,10 @@ export const Bonfire: React.FC<BonfireProps> = ({
       <pointLight
         ref={lightRef}
         position={[0, 0.6, 0]}
-        color="#ffbba4"
+        color="#ffffff"
         intensity={5}
         distance={50}
-        decay={0.4}
+        decay={0.5}
         castShadow={false}
       />
     </group>

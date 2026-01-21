@@ -32,13 +32,14 @@ export const World: React.FC<WorldProps> = ({
       {/* Skybox - 360度パノラマ背景 */}
       <Skybox radius={500} />
 
+      {/* 環境光 */}
+      <ambientLight intensity={0.4} color="#b6e4ff" />
+
       {/* BGM - 虫の鳴き声 */}
       <BackgroundAudio src="insects_sing_in_fall.mp3" volume={0.01} loop />
 
       {/* プレイヤーのスポーン地点（小道の先） */}
-      <group position={[worldSize * 1.1, 0, worldSize * 1.1]}>
-        <SpawnPoint yaw={45} />
-      </group>
+      <SpawnPoint position={[worldSize * 1.1, 0, worldSize * 1.1]} yaw={45} />
 
       {/* 地面（緑・大） */}
       <RigidBody type="fixed" colliders="trimesh" restitution={0} friction={0}>
