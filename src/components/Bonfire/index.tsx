@@ -4,6 +4,7 @@ import { PointLight } from "three";
 import { Embers } from "../Embers";
 import { Fire } from "../Fire";
 import { Sparks } from "../Sparks";
+import { SpatialAudio } from "../SpatialAudio";
 
 export interface BonfireProps {
   position?: [number, number, number];
@@ -83,6 +84,14 @@ export const Bonfire: React.FC<BonfireProps> = ({
         distance={50}
         decay={0.5}
         castShadow={false}
+      />
+      {/* 焚き火の音 */}
+      <SpatialAudio
+        src="takibi.mp3"
+        position={position}
+        maxVolume={0.5}
+        refDistance={2}
+        maxDistance={15}
       />
     </group>
   );
