@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { PointLight } from "three";
 import { Fire } from "../Fire";
+import { Sparks } from "../Sparks";
 
 export interface BonfireProps {
   position?: [number, number, number];
@@ -47,6 +48,14 @@ export const Bonfire: React.FC<BonfireProps> = ({
       </mesh>
       {/* 炎（シェーダー） */}
       <Fire scale={1.8} />
+      {/* 火の粉 */}
+      <Sparks
+        position={[0, 0.5, 0]}
+        count={20}
+        spread={0.8}
+        speed={2.5}
+        size={0.05}
+      />
       {/* 光源 */}
       <pointLight
         ref={lightRef}
