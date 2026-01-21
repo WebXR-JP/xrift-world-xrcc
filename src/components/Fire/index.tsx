@@ -1,6 +1,6 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { ShaderMaterial, AdditiveBlending, Mesh } from 'three'
+import { ShaderMaterial, AdditiveBlending, Mesh, UniformsLib, UniformsUtils } from 'three'
 
 export interface FireProps {
   position?: [number, number, number]
@@ -8,17 +8,23 @@ export interface FireProps {
 }
 
 const vertexShader = `
+  #include <fog_pars_vertex>
+
   varying vec2 vUv;
   varying vec3 vPosition;
 
   void main() {
     vUv = uv;
     vPosition = position;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+    #include <fog_vertex>
   }
 `
 
 const fragmentShader = `
+  #include <fog_pars_fragment>
+
   uniform float uTime;
   uniform float uIntensity;
 
@@ -116,6 +122,8 @@ const fragmentShader = `
     alpha = clamp(alpha, 0.0, 1.0);
 
     gl_FragColor = vec4(fireColor * fire * 3.0, alpha);
+
+    #include <fog_fragment>
   }
 `
 
@@ -124,10 +132,13 @@ export const Fire: React.FC<FireProps> = ({ position = [0, 0, 0], scale = 1 }) =
   const meshRef = useRef<Mesh>(null)
 
   const uniforms = useMemo(
-    () => ({
-      uTime: { value: 0 },
-      uIntensity: { value: 1.5 },
-    }),
+    () => UniformsUtils.merge([
+      UniformsLib.fog,
+      {
+        uTime: { value: 0 },
+        uIntensity: { value: 1.5 },
+      },
+    ]),
     []
   )
 
@@ -157,6 +168,7 @@ export const Fire: React.FC<FireProps> = ({ position = [0, 0, 0], scale = 1 }) =
           transparent
           blending={AdditiveBlending}
           depthWrite={false}
+          fog={false}
         />
       </mesh>
     </group>

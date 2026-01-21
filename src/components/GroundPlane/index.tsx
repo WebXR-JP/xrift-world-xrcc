@@ -13,6 +13,7 @@ export interface GroundPlaneProps {
 
 const vertexShader = `
   #include <common>
+  #include <fog_pars_vertex>
   #include <shadowmap_pars_vertex>
 
   varying vec2 vUv;
@@ -31,6 +32,7 @@ const vertexShader = `
     vViewPosition = mvPosition.xyz;
 
     #include <shadowmap_vertex>
+    #include <fog_vertex>
 
     gl_Position = projectionMatrix * mvPosition;
   }
@@ -39,6 +41,7 @@ const vertexShader = `
 const fragmentShader = `
   #include <common>
   #include <packing>
+  #include <fog_pars_fragment>
   #include <lights_pars_begin>
   #include <shadowmap_pars_fragment>
 
@@ -135,6 +138,8 @@ const fragmentShader = `
     vec3 finalColor = baseColor * lighting;
 
     gl_FragColor = vec4(finalColor, 1.0);
+
+    #include <fog_fragment>
   }
 `
 
@@ -151,6 +156,7 @@ export const GroundPlane: React.FC<GroundPlaneProps> = ({
     const colorObj = new Color(color)
     return UniformsUtils.merge([
       UniformsLib.lights,
+      UniformsLib.fog,
       {
         uColor: { value: colorObj },
         uNoiseScale: { value: noiseScale },
@@ -167,6 +173,7 @@ export const GroundPlane: React.FC<GroundPlaneProps> = ({
         fragmentShader={fragmentShader}
         uniforms={uniforms}
         lights={true}
+        fog={true}
       />
     </mesh>
   )

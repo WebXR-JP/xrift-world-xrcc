@@ -105,6 +105,7 @@ export const Skybox: React.FC<SkyboxProps> = ({ radius = 500 }) => {
         fragmentShader={fragmentShader}
         uniforms={uniforms}
         side={BackSide}
+        fog={false}
       />
     </mesh>
   )

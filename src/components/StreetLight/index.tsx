@@ -1,19 +1,26 @@
+import { useMemo } from "react";
 import { Billboard } from "@react-three/drei";
-import { AdditiveBlending } from "three";
+import { AdditiveBlending, UniformsLib, UniformsUtils } from "three";
 
 export interface StreetLightProps {
   position?: [number, number, number];
 }
 
 const glowVertexShader = `
+  #include <fog_pars_vertex>
+
   varying vec2 vUv;
   void main() {
     vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+    #include <fog_vertex>
   }
 `;
 
 const glowFragmentShader = `
+  #include <fog_pars_fragment>
+
   varying vec2 vUv;
 
   void main() {
@@ -26,12 +33,19 @@ const glowFragmentShader = `
 
     vec3 color = vec3(1.0, 0.98, 0.9);
     gl_FragColor = vec4(color, alpha * 0.5);
+
+    #include <fog_fragment>
   }
 `;
 
 export const StreetLight: React.FC<StreetLightProps> = ({
   position = [0, 0, 0],
 }) => {
+  const glowUniforms = useMemo(
+    () => UniformsUtils.merge([UniformsLib.fog, {}]),
+    []
+  );
+
   return (
     <group position={position}>
       {/* 柱 */}
@@ -56,9 +70,11 @@ export const StreetLight: React.FC<StreetLightProps> = ({
           <shaderMaterial
             vertexShader={glowVertexShader}
             fragmentShader={glowFragmentShader}
+            uniforms={glowUniforms}
             transparent
             depthWrite={false}
             blending={AdditiveBlending}
+            fog={false}
           />
         </mesh>
       </Billboard>
