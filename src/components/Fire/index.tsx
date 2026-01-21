@@ -1,6 +1,6 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { ShaderMaterial, AdditiveBlending, Mesh, UniformsLib, UniformsUtils } from 'three'
+import { ShaderMaterial, AdditiveBlending, Mesh, UniformsLib, UniformsUtils, Vector3 } from 'three'
 
 export interface FireProps {
   position?: [number, number, number]
@@ -146,13 +146,13 @@ export const Fire: React.FC<FireProps> = ({ position = [0, 0, 0], scale = 1 }) =
     if (materialRef.current) {
       materialRef.current.uniforms.uTime.value += delta
     }
-    // Y軸のみのビルボード
+    // Y軸のみのビルボード（VR対応: ワールド座標を使用）
     if (meshRef.current) {
-      const camera = state.camera
-      const mesh = meshRef.current
-      const dx = camera.position.x - mesh.getWorldPosition(mesh.position.clone()).x
-      const dz = camera.position.z - mesh.getWorldPosition(mesh.position.clone()).z
-      mesh.rotation.y = Math.atan2(dx, dz)
+      const cameraWorldPos = state.camera.getWorldPosition(new Vector3())
+      const meshWorldPos = meshRef.current.getWorldPosition(new Vector3())
+      const dx = cameraWorldPos.x - meshWorldPos.x
+      const dz = cameraWorldPos.z - meshWorldPos.z
+      meshRef.current.rotation.y = Math.atan2(dx, dz)
     }
   })
 
