@@ -54,7 +54,7 @@ export const Bonfire: React.FC<BonfireProps> = ({
         count={20}
         spread={0.8}
         speed={2.5}
-        size={0.05}
+        size={0.012}
       />
       {/* 光源 */}
       <pointLight

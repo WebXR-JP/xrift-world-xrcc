@@ -145,7 +145,7 @@ export const Sparks: React.FC<SparksProps> = ({
 
   return (
     <group position={position}>
-      <points ref={pointsRef} geometry={geometry}>
+      <points ref={pointsRef} geometry={geometry} frustumCulled={false}>
         <pointsMaterial
           ref={materialRef}
           size={size}
