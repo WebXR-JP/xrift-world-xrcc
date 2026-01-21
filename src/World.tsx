@@ -2,6 +2,7 @@ import {
   SpawnPoint,
   ScreenShareDisplay,
   TagBoard,
+  Mirror,
 } from "@xrift/world-components";
 import { RigidBody } from "@react-three/rapier";
 // TODO: MToon修正後にfogを有効化
@@ -52,7 +53,7 @@ export const World: React.FC<WorldProps> = ({
       <BackgroundAudio src="insects_sing_in_fall.mp3" volume={0.01} loop />
 
       {/* プレイヤーのスポーン地点（小道の先） */}
-      <SpawnPoint position={[worldSize * 1.1, 0, worldSize * 1.1]} yaw={45} />
+      <SpawnPoint position={[worldSize * 1.2, 0, worldSize * 1.2]} yaw={45} />
 
       {/* 地面（緑・大） */}
       <RigidBody type="fixed" colliders="trimesh" restitution={0} friction={0}>
@@ -136,12 +137,15 @@ export const World: React.FC<WorldProps> = ({
         />
       </RigidBody>
 
-      {/* 入口の看板（TagBoard） */}
+      {/* 入口の看板（TagBoardとミラー） */}
       <WoodenSignboard
         position={[worldSize * 1.05 - 2, 0, worldSize * 1.05 + 2]}
         rotation={[0, Math.PI * 0.75, 0]}
       >
-        <TagBoard instanceStateKey="entrance-tagboard" position={[0, 0, 0]} />
+        <group position={[-1, 0, 0]} scale={0.6}>
+          <TagBoard instanceStateKey="entrance-tagboard" />
+        </group>
+        <Mirror position={[1.2, 0, 0]} size={[1.5, 2]} />
       </WoodenSignboard>
 
       {/* 道沿いの照明 */}
