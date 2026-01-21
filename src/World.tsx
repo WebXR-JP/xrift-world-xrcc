@@ -4,18 +4,11 @@ import {
   TagBoard,
 } from "@xrift/world-components";
 import { RigidBody } from "@react-three/rapier";
-import {
-  EffectComposer,
-  Bloom,
-  ToneMapping,
-} from "@react-three/postprocessing";
-import { ToneMappingMode } from "postprocessing";
 import { BackgroundAudio } from "./components/BackgroundAudio";
 import { Bonfire } from "./components/Bonfire";
 import { Grass } from "./components/Grass";
 import { Ground } from "./components/Ground";
 import { GroundPlane } from "./components/GroundPlane";
-import { Lantern } from "./components/Lantern";
 import { Skybox } from "./components/Skybox";
 import { StreetLight } from "./components/StreetLight";
 import { Trees } from "./components/Trees";
@@ -141,33 +134,21 @@ export const World: React.FC<WorldProps> = ({
       <StreetLight position={[worldSize * 0.85 - 2, 0, worldSize * 0.85 + 2]} />
       <StreetLight position={[worldSize * 1.05 + 2, 0, worldSize * 1.05 - 2]} />
 
-      {/* ランタン（北東） */}
-      <Lantern position={[worldSize * 0.45, 0, -worldSize * 0.75]} />
-      <Lantern position={[worldSize * 0.75, 0, -worldSize * 0.45]} />
+      {/* 照明（北東） */}
+      <StreetLight position={[worldSize * 0.45, 0, -worldSize * 0.75]} />
+      <StreetLight position={[worldSize * 0.75, 0, -worldSize * 0.45]} />
 
-      {/* ランタン（北西） */}
-      <Lantern position={[-worldSize * 0.45, 0, -worldSize * 0.75]} />
-      <Lantern position={[-worldSize * 0.75, 0, -worldSize * 0.45]} />
+      {/* 照明（北西） */}
+      <StreetLight position={[-worldSize * 0.45, 0, -worldSize * 0.75]} />
+      <StreetLight position={[-worldSize * 0.75, 0, -worldSize * 0.45]} />
 
-      {/* ランタン（南東） */}
-      <Lantern position={[worldSize * 0.45, 0, worldSize * 0.75]} />
-      <Lantern position={[worldSize * 0.75, 0, worldSize * 0.45]} />
+      {/* 照明（南東） */}
+      <StreetLight position={[worldSize * 0.45, 0, worldSize * 0.75]} />
+      <StreetLight position={[worldSize * 0.75, 0, worldSize * 0.45]} />
 
-      {/* ランタン（南西） */}
-      <Lantern position={[-worldSize * 0.45, 0, worldSize * 0.75]} />
-      <Lantern position={[-worldSize * 0.75, 0, worldSize * 0.45]} />
-
-      {/* Bloom エフェクト（軽量設定） */}
-      <EffectComposer>
-        <Bloom
-          intensity={2.0}
-          luminanceThreshold={1.2}
-          luminanceSmoothing={0.2}
-          mipmapBlur
-          levels={3}
-        />
-        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-      </EffectComposer>
+      {/* 照明（南西） */}
+      <StreetLight position={[-worldSize * 0.45, 0, worldSize * 0.75]} />
+      <StreetLight position={[-worldSize * 0.75, 0, worldSize * 0.45]} />
     </group>
   );
 };

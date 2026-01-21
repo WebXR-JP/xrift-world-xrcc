@@ -72,11 +72,7 @@ const fragmentShader = `
 
     vec3 finalColor = skyColor + starColor * starField;
 
-    // sRGB to Linear 変換（EffectComposer が linear 空間で処理するため）
-    finalColor = pow(finalColor, vec3(2.2));
-
-    // Bloom の影響を受けないよう 1.0 以下に clamp
-    gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0);
+    gl_FragColor = vec4(finalColor, 1.0);
   }
 `
 

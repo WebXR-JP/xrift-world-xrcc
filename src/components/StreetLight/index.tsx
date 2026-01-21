@@ -1,6 +1,33 @@
+import { Billboard } from "@react-three/drei";
+import { AdditiveBlending } from "three";
+
 export interface StreetLightProps {
-  position?: [number, number, number]
+  position?: [number, number, number];
 }
+
+const glowVertexShader = `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const glowFragmentShader = `
+  varying vec2 vUv;
+
+  void main() {
+    vec2 center = vec2(0.5);
+    float dist = length(vUv - center) * 2.0;
+
+    // 中心から外側へ滑らかに減衰
+    float alpha = 1.0 - smoothstep(0.0, 1.0, dist);
+    alpha = pow(alpha, 1.5);
+
+    vec3 color = vec3(1.0, 0.98, 0.9);
+    gl_FragColor = vec4(color, alpha * 0.5);
+  }
+`;
 
 export const StreetLight: React.FC<StreetLightProps> = ({
   position = [0, 0, 0],
@@ -22,6 +49,19 @@ export const StreetLight: React.FC<StreetLightProps> = ({
           toneMapped={false}
         />
       </mesh>
+      {/* グロー（ビルボード） */}
+      <Billboard position={[0, 2.6, 0]}>
+        <mesh>
+          <planeGeometry args={[2, 2]} />
+          <shaderMaterial
+            vertexShader={glowVertexShader}
+            fragmentShader={glowFragmentShader}
+            transparent
+            depthWrite={false}
+            blending={AdditiveBlending}
+          />
+        </mesh>
+      </Billboard>
       {/* 光源 */}
       <pointLight
         position={[0, 2.6, 0]}
@@ -30,5 +70,5 @@ export const StreetLight: React.FC<StreetLightProps> = ({
         distance={20}
       />
     </group>
-  )
-}
+  );
+};
