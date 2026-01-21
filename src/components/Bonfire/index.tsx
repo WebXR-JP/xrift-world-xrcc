@@ -66,7 +66,7 @@ export const Bonfire: React.FC<BonfireProps> = ({
       {/* 炎（シェーダー） */}
       <Fire scale={1.8} />
       {/* 根本のもやもや（境界を隠す） */}
-      <Embers position={[0, 0, 0]} count={15} spread={0.9} size={1.4} />
+      <Embers position={[0, 0, 0]} count={20} spread={0.9} size={1.2} />
       {/* 火の粉 */}
       <Sparks
         position={[0, 0.5, 0]}

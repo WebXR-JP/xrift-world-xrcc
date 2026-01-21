@@ -86,8 +86,8 @@ export const Embers: React.FC<EmbersProps> = ({
     e.x = (Math.random() - 0.5) * spread;
     e.y = Math.random() * 0.2;
     e.z = (Math.random() - 0.5) * spread;
-    e.vy = 0.1 + Math.random() * 0.15;
-    e.maxLife = 1.5 + Math.random() * 1.5;
+    e.vy = 0.3 + Math.random() * 0.3;
+    e.maxLife = 0.8 + Math.random() * 0.7;
     e.life = e.maxLife;
     e.scale = 0.5 + Math.random() * 0.5;
   };
@@ -121,8 +121,12 @@ export const Embers: React.FC<EmbersProps> = ({
       e.x += (Math.random() - 0.5) * 0.02;
       e.z += (Math.random() - 0.5) * 0.02;
 
+      // 上に上がるにつれてxを中央に寄せる（zはビルボードなので不要）
+      const centeringFactor = 1.0 - lifeRatio; // 0→1（上に行くほど大きく）
+      const centeredX = e.x * (1.0 - centeringFactor * 0.8);
+
       dummy.position.set(
-        position[0] + e.x,
+        position[0] + centeredX,
         position[1] + e.y,
         position[2] + e.z
       );
