@@ -18,7 +18,6 @@ const vertexShader = `
 
   varying vec2 vUv;
   varying vec3 vWorldPosition;
-  varying vec3 vViewPosition;
   varying vec3 vNormal;
 
   void main() {
@@ -29,7 +28,6 @@ const vertexShader = `
     vWorldPosition = worldPosition.xyz;
 
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-    vViewPosition = mvPosition.xyz;
 
     #include <shadowmap_vertex>
     #include <fog_vertex>
@@ -51,7 +49,6 @@ const fragmentShader = `
 
   varying vec2 vUv;
   varying vec3 vWorldPosition;
-  varying vec3 vViewPosition;
   varying vec3 vNormal;
 
   // 疑似乱数
@@ -112,10 +109,12 @@ const fragmentShader = `
     // アンビエントライト
     vec3 lighting = ambientLightColor;
 
-    // ポイントライト（view spaceで計算）
+    // ポイントライト（ワールド空間で計算）
     #if NUM_POINT_LIGHTS > 0
       for (int i = 0; i < NUM_POINT_LIGHTS; i++) {
-        vec3 lightDir = pointLights[i].position - vViewPosition;
+        // ライト位置をビュー空間からワールド空間に変換
+        vec3 lightWorldPos = (inverse(viewMatrix) * vec4(pointLights[i].position, 1.0)).xyz;
+        vec3 lightDir = lightWorldPos - vWorldPosition;
         float lightDistance = length(lightDir);
         lightDir = normalize(lightDir);
 
@@ -128,8 +127,8 @@ const fragmentShader = `
           distanceFalloff *= saturate(1.0 - pow(distanceRatio, 4.0));
         }
 
-        // ランバート拡散
-        float diff = max(dot(normal, lightDir), 0.0);
+        // ランバート拡散（ワールド空間の上向き法線を使用）
+        float diff = max(dot(vec3(0.0, 1.0, 0.0), lightDir), 0.0);
 
         lighting += pointLights[i].color * diff * distanceFalloff;
       }

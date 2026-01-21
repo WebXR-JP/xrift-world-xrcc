@@ -142,10 +142,10 @@ export const World: React.FC<WorldProps> = ({
         position={[worldSize * 1.05 - 2, 0, worldSize * 1.05 + 2]}
         rotation={[0, Math.PI * 0.75, 0]}
       >
-        <group position={[-1, 0, 0]} scale={0.6}>
+        <group position={[-1, -0.65, 0]} scale={0.6}>
           <TagBoard instanceStateKey="entrance-tagboard" />
         </group>
-        <Mirror position={[1.2, 0, 0]} size={[1.5, 2]} />
+        <Mirror position={[1.35, 0, 0]} size={[1.7, 2.5]} />
       </WoodenSignboard>
 
       {/* 道沿いの照明 */}
