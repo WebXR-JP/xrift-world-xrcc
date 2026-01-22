@@ -2,7 +2,6 @@ import {
   SpawnPoint,
   ScreenShareDisplay,
   TagBoard,
-  Mirror,
 } from "@xrift/world-components";
 import { RigidBody } from "@react-three/rapier";
 // TODO: MToon修正後にfogを有効化
@@ -14,6 +13,7 @@ import { Bonfire } from "./components/Bonfire";
 import { Grass } from "./components/Grass";
 import { Ground } from "./components/Ground";
 import { GroundPlane } from "./components/GroundPlane";
+import { ProximityMirror } from "./components/ProximityMirror";
 import { Skybox } from "./components/Skybox";
 import { StreetLight } from "./components/StreetLight";
 import { Trees } from "./components/Trees";
@@ -145,7 +145,7 @@ export const World: React.FC<WorldProps> = ({
         <group position={[-1, -0.65, 0]} scale={0.6}>
           <TagBoard instanceStateKey="entrance-tagboard" />
         </group>
-        <Mirror position={[1.35, 0, 0]} size={[1.7, 2.5]} />
+        <ProximityMirror position={[1.35, 0, 0]} size={[1.7, 2.5]} maxDistance={10} />
       </WoodenSignboard>
 
       {/* 道沿いの照明 */}
