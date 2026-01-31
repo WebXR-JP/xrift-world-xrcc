@@ -4,10 +4,9 @@ import {
   TagBoard,
 } from "@xrift/world-components";
 import { RigidBody } from "@react-three/rapier";
-// TODO: MToon修正後にfogを有効化
-// import { useThree } from "@react-three/fiber";
-// import { useLayoutEffect } from "react";
-// import { Fog } from "three";
+import { useThree } from "@react-three/fiber";
+import { useLayoutEffect } from "react";
+import { Fog } from "three";
 import { BackgroundAudio } from "./components/BackgroundAudio";
 import { Bonfire } from "./components/Bonfire";
 import { Grass } from "./components/Grass";
@@ -32,14 +31,13 @@ export const World: React.FC<WorldProps> = ({
 }) => {
   const worldSize = WORLD_CONFIG.size * scale;
 
-  // TODO: MToon修正後にfogを有効化
-  // const { scene } = useThree();
-  // useLayoutEffect(() => {
-  //   scene.fog = new Fog("#636B81", 20, 80);
-  //   return () => {
-  //     scene.fog = null;
-  //   };
-  // }, [scene]);
+  const { scene } = useThree();
+  useLayoutEffect(() => {
+    scene.fog = new Fog("#636B81", 20, 80);
+    return () => {
+      scene.fog = null;
+    };
+  }, [scene]);
 
   return (
     <group position={position} scale={scale}>
