@@ -1,118 +1,42 @@
-# XRift World Template
+# XRift Creative Commons
 
-XRiftで動作するWebXRワールドを作成するための公式テンプレートです。
+つくる・配信する・眺めるが、自然に混ざり合う創作の広場。
 
-## 概要
+[XRift](https://xrift.net) プラットフォーム上で動作するWebXRワールドです。
 
-このテンプレートは、XRift CLIで新しいワールドプロジェクトを作成する際に使用されます。React Three Fiber、Rapier物理エンジン、Three.jsを使用した3Dワールドの基本構成がセットアップ済みで、すぐに開発を始められます。
+## ワールド概要
 
-## このテンプレートに含まれる機能
+森に囲まれた円形の広場を中心とした、夜の屋外空間です。
 
-- **React Three Fiber**: Reactコンポーネントとして3Dシーンを構築
-- **Rapier物理エンジン**: リアルな物理演算（衝突判定、重力など）
-- **Three.js**: WebGLベースの3Dグラフィックス
-- **Module Federation**: XRiftプラットフォームでの動的読み込み対応
-- **TypeScript**: 型安全な開発環境
-- **サンプルワールド**: 物理演算やオブジェクト配置の実装例
+- 中央のたき火を囲むキャンプファイヤー的な空間
+- 4面のビデオウォールで映像を共有
+- 画面共有用の木製看板
+- 入口にはTagBoardとミラーを設置
+- 虫の声が聞こえるBGM、街灯による雰囲気のあるライティング
+- フォグによる奥行き表現
 
-## 使い方
-
-### 1. XRift CLIをインストール
+## 開発
 
 ```bash
-npm install -g @xrift/cli
+npm install
+npm run dev        # 開発サーバー起動 (http://localhost:5173)
+npm run build      # 本番ビルド
+npm run typecheck  # 型チェック
 ```
 
-### 2. XRiftにログイン
+## デプロイ
 
 ```bash
 xrift login
+xrift upload world
 ```
 
-### 3. 新しいワールドプロジェクトを作成
+## 技術スタック
 
-```bash
-xrift create my-world
-```
-
-### 4. 開発サーバーを起動
-
-```bash
-cd my-world
-npm install
-npm run dev
-```
-
-### 5. ビルド
-
-```bash
-npm run build
-```
-
-## 開発コマンド
-
-```bash
-# 開発サーバー起動（ホットリロード有効）
-npm run dev
-
-# プロダクションビルド
-npm run build
-
-# ビルド結果のプレビュー
-npm run preview
-
-# TypeScript型チェック
-npm run typecheck
-```
-
-## 物理設定（physics）
-
-xrift.jsonの`world.physics`セクションでワールドの物理動作をカスタマイズできます。
-
-| 設定 | 型 | デフォルト | 説明 |
-|------|-----|---------|------|
-| `gravity` | number | 9.81 | 重力の強さ |
-| `allowInfiniteJump` | boolean | true | 無限ジャンプを許可するか |
-
-### 例：アスレチックワールド（無限ジャンプ禁止）
-
-```json
-{
-  "world": {
-    "physics": {
-      "allowInfiniteJump": false
-    }
-  }
-}
-```
-
-### 例：低重力ワールド
-
-```json
-{
-  "world": {
-    "physics": {
-      "gravity": 3.0
-    }
-  }
-}
-```
-
-## ドキュメント
-
-ワールド開発の詳細（アセットの読み込み、SpawnPoint、Interactable、useInstanceStateなど）については、公式ドキュメントをご覧ください。
-
-**[docs.xrift.net](https://docs.xrift.net)**
-
-## 関連リンク
-
-- [xrift-world-components](https://github.com/WebXR-JP/xrift-world-components) - ワールド開発用コンポーネントライブラリ
-- [xrift-cli](https://github.com/WebXR-JP/xrift-cli) - XRift CLI
-- [XRift](https://xrift.net) - XRiftプラットフォーム
-
-## サポート
-
-- Issues: [GitHub Issues](https://github.com/WebXR-JP/xrift-world-template/issues)
+- [React Three Fiber](https://docs.pmnd.rs/react-three-fiber) + [Three.js](https://threejs.org/)
+- [Rapier](https://rapier.rs/) 物理エンジン
+- [@xrift/world-components](https://github.com/WebXR-JP/xrift-world-components)
+- TypeScript / Vite / Module Federation
 
 ## ライセンス
 
