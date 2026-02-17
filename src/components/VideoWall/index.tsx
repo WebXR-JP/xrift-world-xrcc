@@ -1,5 +1,6 @@
 import { RigidBody } from "@react-three/rapier";
-import { LiveVideoPlayer } from "@xrift/world-components";
+import { LiveVideoPlayer, Interactable, useXRift } from "@xrift/world-components";
+import { useTexture } from "@react-three/drei";
 
 export interface VideoWallProps {
   id: string;
@@ -33,6 +34,29 @@ export const VideoWall: React.FC<VideoWallProps> = ({
         width={6}
         url=""
       />
+      <PebbleChatBanner id={`${id}-pebble-chat`} />
     </group>
+  );
+};
+
+const BANNER_SIZE = 1.2;
+
+const PebbleChatBanner: React.FC<{ id: string }> = ({ id }) => {
+  const { baseUrl } = useXRift();
+  const texture = useTexture(`${baseUrl}pebble_chat.png`);
+
+  return (
+    <Interactable
+      id={id}
+      onInteract={() => {
+        window.open("https://sawa-zen.booth.pm/items/7919966", "_blank");
+      }}
+      interactionText="BOOTHで見る"
+    >
+      <mesh position={[WALL_WIDTH / 2 - BANNER_SIZE / 2 - 0.3, BANNER_SIZE / 2 + 1.0, 0.3]}>
+        <planeGeometry args={[BANNER_SIZE, BANNER_SIZE]} />
+        <meshBasicMaterial map={texture} />
+      </mesh>
+    </Interactable>
   );
 };

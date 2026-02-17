@@ -4,6 +4,8 @@
 
 [XRift](https://xrift.net) プラットフォーム上で動作するWebXRワールドです。
 
+**[ワールドに入る](https://app.xrift.net/world/cdd3397c-7749-45a1-bdb4-c958cc9f1237)**
+
 ## ワールド概要
 
 森に囲まれた円形の広場を中心とした、夜の屋外空間です。
