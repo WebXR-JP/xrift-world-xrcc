@@ -41,6 +41,8 @@ export const VideoWall: React.FC<VideoWallProps> = ({
 
 const BANNER_SIZE = 1.2;
 
+const BOOTH_URL = "https://sawa-zen.booth.pm/items/7919966";
+
 const PebbleChatBanner: React.FC<{ id: string }> = ({ id }) => {
   const { baseUrl } = useXRift();
   const texture = useTexture(`${baseUrl}pebble_chat.png`);
@@ -49,7 +51,7 @@ const PebbleChatBanner: React.FC<{ id: string }> = ({ id }) => {
     <Interactable
       id={id}
       onInteract={() => {
-        window.open("https://sawa-zen.booth.pm/items/7919966", "_blank");
+        window.open(BOOTH_URL, "_blank");
       }}
       interactionText="BOOTHで見る"
     >
