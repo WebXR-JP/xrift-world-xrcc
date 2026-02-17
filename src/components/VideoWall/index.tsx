@@ -53,7 +53,7 @@ const PebbleChatBanner: React.FC<{ id: string }> = ({ id }) => {
       }}
       interactionText="BOOTHで見る"
     >
-      <mesh position={[WALL_WIDTH / 2 - BANNER_SIZE / 2 - 0.3, BANNER_SIZE / 2 + 1.0, 0.3]}>
+      <mesh position={[WALL_WIDTH / 2 - BANNER_SIZE / 2 - 0.38, BANNER_SIZE / 2 + 0.7, 0.3]}>
         <planeGeometry args={[BANNER_SIZE, BANNER_SIZE]} />
         <meshBasicMaterial map={texture} />
       </mesh>
