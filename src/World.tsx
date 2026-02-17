@@ -1,18 +1,14 @@
-import {
-  SpawnPoint,
-  ScreenShareDisplay,
-  TagBoard,
-} from "@xrift/world-components";
+import { SpawnPoint, ScreenShareDisplay } from "@xrift/world-components";
 import { RigidBody } from "@react-three/rapier";
 import { useThree } from "@react-three/fiber";
 import { useLayoutEffect } from "react";
 import { Fog } from "three";
 import { BackgroundAudio } from "./components/BackgroundAudio";
 import { Bonfire } from "./components/Bonfire";
+import { EntranceSignboard } from "./components/EntranceSignboard";
 import { Grass } from "./components/Grass";
 import { Ground } from "./components/Ground";
 import { GroundPlane } from "./components/GroundPlane";
-import { ProximityMirror } from "./components/ProximityMirror";
 import { Skybox } from "./components/Skybox";
 import { StreetLight } from "./components/StreetLight";
 import { Trees } from "./components/Trees";
@@ -135,16 +131,11 @@ export const World: React.FC<WorldProps> = ({
         />
       </RigidBody>
 
-      {/* 入口の看板（TagBoardとミラー） */}
-      <WoodenSignboard
+      {/* 入口の看板（ロゴ・TagBoard・ミラー） */}
+      <EntranceSignboard
         position={[worldSize * 1.05 - 2, 0, worldSize * 1.05 + 2]}
         rotation={[0, Math.PI * 0.75, 0]}
-      >
-        <group position={[-1, -0.65, 0]} scale={0.6}>
-          <TagBoard instanceStateKey="entrance-tagboard" />
-        </group>
-        <ProximityMirror position={[1.35, 0, 0]} size={[1.7, 2.5]} maxDistance={10} />
-      </WoodenSignboard>
+      />
 
       {/* 道沿いの照明 */}
       <StreetLight position={[worldSize * 0.85 - 2, 0, worldSize * 0.85 + 2]} />
