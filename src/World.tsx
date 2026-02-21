@@ -8,7 +8,6 @@ import { Bonfire } from "./components/Bonfire";
 import { EntranceSignboard } from "./components/EntranceSignboard";
 import { Grass } from "./components/Grass";
 import { Ground } from "./components/Ground";
-import { GroundPlane } from "./components/GroundPlane";
 import { Skybox } from "./components/Skybox";
 import { StreetLight } from "./components/StreetLight";
 import { Trees } from "./components/Trees";
@@ -49,12 +48,14 @@ export const World: React.FC<WorldProps> = ({
       {/* プレイヤーのスポーン地点（小道の先） */}
       <SpawnPoint position={[worldSize * 1.2, 0, worldSize * 1.2]} yaw={45} />
 
-      {/* 地面（緑・大） */}
+      {/* 地面（茶色・全面） */}
       <RigidBody type="fixed" colliders="trimesh" restitution={0} friction={0}>
         <Ground
           radius={worldSize * 2}
-          color="#4a8f3c"
-          position={[0, -0.1, 0]}
+          color="#B5651D"
+          outerColor="#4a8f3c"
+          colorRadius={worldSize * 1.05}
+          position={[0, 0, 0]}
           noiseScale={0.3}
           noiseIntensity={0.5}
         />
@@ -69,21 +70,10 @@ export const World: React.FC<WorldProps> = ({
 
       {/* 草 */}
       <Grass
-        count={500}
+        count={10000}
         innerRadius={worldSize * 1.05}
         outerRadius={worldSize * 1.95}
       />
-
-      {/* 地面（レンガ色・円形） */}
-      <RigidBody type="fixed" colliders="trimesh" restitution={0} friction={0}>
-        <Ground
-          radius={worldSize}
-          color="#B5651D"
-          position={[0, 0, 0]}
-          noiseScale={0.8}
-          noiseIntensity={0.4}
-        />
-      </RigidBody>
 
       {/* たき火（中央） */}
       <Bonfire />
@@ -118,19 +108,6 @@ export const World: React.FC<WorldProps> = ({
         color={COLORS.wall}
       />
 
-      {/* 細い道（南東方向） */}
-      <RigidBody type="fixed" colliders="cuboid" restitution={0} friction={0}>
-        <GroundPlane
-          width={3}
-          height={worldSize * 0.8}
-          color="#B5651D"
-          position={[worldSize * 0.95, -0.05, worldSize * 0.95]}
-          rotation={[-Math.PI / 2, 0, Math.PI / 4]}
-          noiseScale={0.8}
-          noiseIntensity={0.4}
-        />
-      </RigidBody>
-
       {/* 入口の看板（ロゴ・TagBoard・ミラー） */}
       <EntranceSignboard
         position={[worldSize * 1.05 - 2, 0, worldSize * 1.05 + 2]}
@@ -156,6 +133,7 @@ export const World: React.FC<WorldProps> = ({
       {/* 照明（南西） */}
       <StreetLight position={[-worldSize * 0.45, 0, worldSize * 0.75]} />
       <StreetLight position={[-worldSize * 0.75, 0, worldSize * 0.45]} />
+
     </group>
   );
 };
