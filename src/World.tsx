@@ -70,7 +70,7 @@ export const World: React.FC<WorldProps> = ({
 
       {/* 草 */}
       <Grass
-        count={80000}
+        count={40000}
         innerRadius={worldSize * 1.05}
         outerRadius={worldSize * 1.95}
       />

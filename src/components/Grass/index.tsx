@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react'
+import { useRef, useMemo, createRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import {
   BufferGeometry,
@@ -7,9 +7,11 @@ import {
   Float32BufferAttribute,
   InstancedBufferAttribute,
   InstancedBufferGeometry,
+  Mesh,
   ShaderMaterial,
   UniformsLib,
   UniformsUtils,
+  Vector3,
 } from 'three'
 
 export interface GrassProps {
@@ -29,6 +31,15 @@ interface GrassInstance {
   windPhase: number
   colorShift: number
 }
+
+const SECTOR_COUNT = 6
+const SECTOR_ANGLE = (Math.PI * 2) / SECTOR_COUNT // 60°
+const VISIBILITY_DISTANCE = 50 // カメラからセクター中心までの表示閾値
+const BEHIND_CULL_DISTANCE = 25 // この距離以上かつ背後のセクターを非表示
+const BEHIND_ANGLE_THRESHOLD = Math.PI * 2 / 3 // 背後判定の角度閾値（±120°）
+const LOD_NEAR_DISTANCE = 15 // この距離以内は100%描画
+const LOD_FAR_DISTANCE = 45 // この距離以上は最低密度
+const LOD_MIN_RATIO = 0.3 // 最遠距離での描画割合（30%）
 
 const generateGrassInstances = (
   count: number,
@@ -80,6 +91,28 @@ const generateGrassInstances = (
     })
   }
   return instances
+}
+
+/**
+ * インスタンスを角度ベースで6セクターに振り分ける
+ * セクター0: 0°〜60°, セクター1: 60°〜120°, ...
+ */
+const splitIntoSectors = (instances: GrassInstance[]): GrassInstance[][] => {
+  const sectors: GrassInstance[][] = Array.from({ length: SECTOR_COUNT }, () => [])
+
+  for (const inst of instances) {
+    // カメラ方向と同じ atan2(x, z) 座標系で角度を計算（0〜2πに変換）
+    let angle = Math.atan2(inst.x, inst.z)
+    if (angle < 0) angle += Math.PI * 2
+
+    const sectorIndex = Math.min(
+      Math.floor(angle / SECTOR_ANGLE),
+      SECTOR_COUNT - 1,
+    )
+    sectors[sectorIndex].push(inst)
+  }
+
+  return sectors
 }
 
 /**
@@ -136,6 +169,67 @@ const createBladeGeometry = (): BufferGeometry => {
   geom.setIndex(indices)
 
   return geom
+}
+
+/**
+ * セクター内のインスタンスから InstancedBufferGeometry を生成
+ */
+const createSectorGeometry = (
+  bladeGeom: BufferGeometry,
+  sectorInstances: GrassInstance[],
+): InstancedBufferGeometry => {
+  const instancedGeom = new InstancedBufferGeometry()
+
+  // ベースジオメトリの属性をコピー
+  instancedGeom.index = bladeGeom.index
+  instancedGeom.setAttribute('position', bladeGeom.getAttribute('position'))
+  instancedGeom.setAttribute('normal', bladeGeom.getAttribute('normal'))
+  instancedGeom.setAttribute('aHeight', bladeGeom.getAttribute('aHeight'))
+
+  // per-instance 属性
+  const instanceCount = sectorInstances.length
+  const offsets = new Float32Array(instanceCount * 3)
+  const rotations = new Float32Array(instanceCount)
+  const scales = new Float32Array(instanceCount * 2)
+  const windPhases = new Float32Array(instanceCount)
+  const colorShifts = new Float32Array(instanceCount)
+
+  for (let i = 0; i < instanceCount; i++) {
+    const inst = sectorInstances[i]
+    offsets[i * 3] = inst.x
+    offsets[i * 3 + 1] = 0
+    offsets[i * 3 + 2] = inst.z
+    rotations[i] = inst.rotation
+    scales[i * 2] = inst.widthScale
+    scales[i * 2 + 1] = inst.heightScale
+    windPhases[i] = inst.windPhase
+    colorShifts[i] = inst.colorShift
+  }
+
+  instancedGeom.setAttribute(
+    'aOffset',
+    new InstancedBufferAttribute(offsets, 3),
+  )
+  instancedGeom.setAttribute(
+    'aRotation',
+    new InstancedBufferAttribute(rotations, 1),
+  )
+  instancedGeom.setAttribute(
+    'aScale',
+    new InstancedBufferAttribute(scales, 2),
+  )
+  instancedGeom.setAttribute(
+    'aWindPhase',
+    new InstancedBufferAttribute(windPhases, 1),
+  )
+  instancedGeom.setAttribute(
+    'aColorShift',
+    new InstancedBufferAttribute(colorShifts, 1),
+  )
+
+  instancedGeom.instanceCount = instanceCount
+
+  return instancedGeom
 }
 
 const vertexShader = `
@@ -250,6 +344,10 @@ const fragmentShader = `
   }
 `
 
+// useFrame 内で使い回す Vector3（GC回避）
+const _cameraPos = new Vector3()
+const _cameraDir = new Vector3()
+
 export const Grass: React.FC<GrassProps> = ({
   count = 500,
   innerRadius,
@@ -259,73 +357,48 @@ export const Grass: React.FC<GrassProps> = ({
 }) => {
   const materialRef = useRef<ShaderMaterial>(null)
 
-  const instances = useMemo(
-    () =>
-      generateGrassInstances(
-        count,
-        innerRadius,
-        outerRadius,
-        excludeAngleStart,
-        excludeAngleEnd,
-      ),
-    [count, innerRadius, outerRadius, excludeAngleStart, excludeAngleEnd],
+  const sectorMeshRefs = useMemo(
+    () => Array.from({ length: SECTOR_COUNT }, () => createRef<Mesh>()),
+    [],
   )
 
-  const geometry = useMemo(() => {
-    const bladeGeom = createBladeGeometry()
-    const instancedGeom = new InstancedBufferGeometry()
-
-    // ベースジオメトリの属性をコピー
-    instancedGeom.index = bladeGeom.index
-    instancedGeom.setAttribute('position', bladeGeom.getAttribute('position'))
-    instancedGeom.setAttribute('normal', bladeGeom.getAttribute('normal'))
-    instancedGeom.setAttribute('aHeight', bladeGeom.getAttribute('aHeight'))
-
-    // per-instance 属性
-    const instanceCount = instances.length
-    const offsets = new Float32Array(instanceCount * 3)
-    const rotations = new Float32Array(instanceCount)
-    const scales = new Float32Array(instanceCount * 2)
-    const windPhases = new Float32Array(instanceCount)
-    const colorShifts = new Float32Array(instanceCount)
-
-    for (let i = 0; i < instanceCount; i++) {
-      const inst = instances[i]
-      offsets[i * 3] = inst.x
-      offsets[i * 3 + 1] = 0
-      offsets[i * 3 + 2] = inst.z
-      rotations[i] = inst.rotation
-      scales[i * 2] = inst.widthScale
-      scales[i * 2 + 1] = inst.heightScale
-      windPhases[i] = inst.windPhase
-      colorShifts[i] = inst.colorShift
-    }
-
-    instancedGeom.setAttribute(
-      'aOffset',
-      new InstancedBufferAttribute(offsets, 3),
+  const sectors = useMemo(() => {
+    const allInstances = generateGrassInstances(
+      count,
+      innerRadius,
+      outerRadius,
+      excludeAngleStart,
+      excludeAngleEnd,
     )
-    instancedGeom.setAttribute(
-      'aRotation',
-      new InstancedBufferAttribute(rotations, 1),
-    )
-    instancedGeom.setAttribute(
-      'aScale',
-      new InstancedBufferAttribute(scales, 2),
-    )
-    instancedGeom.setAttribute(
-      'aWindPhase',
-      new InstancedBufferAttribute(windPhases, 1),
-    )
-    instancedGeom.setAttribute(
-      'aColorShift',
-      new InstancedBufferAttribute(colorShifts, 1),
-    )
+    return splitIntoSectors(allInstances)
+  }, [count, innerRadius, outerRadius, excludeAngleStart, excludeAngleEnd])
 
-    instancedGeom.instanceCount = instanceCount
+  const bladeGeom = useMemo(() => createBladeGeometry(), [])
 
-    return instancedGeom
-  }, [instances])
+  const sectorGeometries = useMemo(
+    () => sectors.map((sectorInstances) => createSectorGeometry(bladeGeom, sectorInstances)),
+    [sectors, bladeGeom],
+  )
+
+  // 各セクターの元のインスタンス数を保持（LODで動的に減らす基準値）
+  const sectorFullCounts = useMemo(
+    () => sectorGeometries.map((geom) => geom.instanceCount),
+    [sectorGeometries],
+  )
+
+  // 各セクターの重心座標（XZ平面）を事前計算
+  const sectorCentroids = useMemo(() => {
+    return sectors.map((sectorInstances) => {
+      if (sectorInstances.length === 0) return { x: 0, z: 0 }
+      let sumX = 0
+      let sumZ = 0
+      for (const inst of sectorInstances) {
+        sumX += inst.x
+        sumZ += inst.z
+      }
+      return { x: sumX / sectorInstances.length, z: sumZ / sectorInstances.length }
+    })
+  }, [sectors])
 
   const uniforms = useMemo(
     () =>
@@ -341,24 +414,79 @@ export const Grass: React.FC<GrassProps> = ({
     [],
   )
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
+    // uTime 更新
     if (materialRef.current) {
       materialRef.current.uniforms.uTime.value += delta
+    }
+
+    // カメラのワールド位置と視線方向を取得
+    state.camera.getWorldPosition(_cameraPos)
+    state.camera.getWorldDirection(_cameraDir)
+
+    // 各セクターの可視性 + 距離LODを判定
+    for (let i = 0; i < SECTOR_COUNT; i++) {
+      const mesh = sectorMeshRefs[i].current
+      if (!mesh) continue
+
+      const geom = sectorGeometries[i]
+      const centroid = sectorCentroids[i]
+      const dx = centroid.x - _cameraPos.x
+      const dz = centroid.z - _cameraPos.z
+      const distSq = dx * dx + dz * dz
+
+      // 距離閾値を超えたら非表示
+      if (distSq >= VISIBILITY_DISTANCE * VISIBILITY_DISTANCE) {
+        mesh.visible = false
+        continue
+      }
+
+      // 近いセクターはそのまま表示
+      if (distSq < BEHIND_CULL_DISTANCE * BEHIND_CULL_DISTANCE) {
+        mesh.visible = true
+      } else {
+        // 中〜遠距離：カメラの背後なら非表示
+        const dot = dx * _cameraDir.x + dz * _cameraDir.z
+        const dist = Math.sqrt(distSq)
+        const dirLen = Math.sqrt(_cameraDir.x * _cameraDir.x + _cameraDir.z * _cameraDir.z)
+        const cosAngle = dot / (dist * dirLen)
+        mesh.visible = cosAngle > Math.cos(BEHIND_ANGLE_THRESHOLD)
+      }
+
+      // 距離に応じてインスタンス数を間引き
+      if (mesh.visible) {
+        const dist = Math.sqrt(distSq)
+        let ratio = 1.0
+        if (dist > LOD_NEAR_DISTANCE) {
+          const t = Math.min((dist - LOD_NEAR_DISTANCE) / (LOD_FAR_DISTANCE - LOD_NEAR_DISTANCE), 1.0)
+          ratio = 1.0 - t * (1.0 - LOD_MIN_RATIO)
+        }
+        geom.instanceCount = Math.ceil(sectorFullCounts[i] * ratio)
+      }
     }
   })
 
   return (
-    <mesh geometry={geometry} frustumCulled={false}>
-      <shaderMaterial
-        ref={materialRef}
-        vertexShader={vertexShader}
-        fragmentShader={fragmentShader}
-        uniforms={uniforms}
-        lights
-        fog
-        side={DoubleSide}
-        depthWrite
-      />
-    </mesh>
+    <>
+      {sectorGeometries.map((geom, i) => (
+        <mesh
+          key={i}
+          ref={sectorMeshRefs[i]}
+          geometry={geom}
+          frustumCulled={false}
+        >
+          <shaderMaterial
+            ref={i === 0 ? materialRef : undefined}
+            vertexShader={vertexShader}
+            fragmentShader={fragmentShader}
+            uniforms={uniforms}
+            lights
+            fog
+            side={DoubleSide}
+            depthWrite
+          />
+        </mesh>
+      ))}
+    </>
   )
 }
