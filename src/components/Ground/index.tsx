@@ -4,6 +4,8 @@ import { Color, UniformsLib, UniformsUtils } from 'three'
 export interface GroundProps {
   radius: number
   color: string
+  outerColor?: string
+  colorRadius?: number
   position?: [number, number, number]
   noiseScale?: number
   noiseIntensity?: number
@@ -42,6 +44,8 @@ const fragmentShader = `
   #include <shadowmap_pars_fragment>
 
   uniform vec3 uColor;
+  uniform vec3 uOuterColor;
+  uniform float uColorRadius;
   uniform float uNoiseScale;
   uniform float uNoiseIntensity;
 
@@ -97,9 +101,14 @@ const fragmentShader = `
 
     float totalNoise = n1 + n2 + n3;
 
+    // 中心からの距離で色を切り替え
+    float dist = length(vWorldPosition.xz);
+    float colorMix = smoothstep(uColorRadius - 1.0, uColorRadius + 1.0, dist);
+    vec3 groundColor = mix(uColor, uOuterColor, colorMix);
+
     // ノイズを色に適用（明暗のバリエーション、暗くなりすぎないよう調整）
     float noiseBrightness = 1.0 + (totalNoise - 0.5) * uNoiseIntensity * 0.5;
-    vec3 baseColor = uColor * noiseBrightness;
+    vec3 baseColor = groundColor * noiseBrightness;
 
     // ライティング計算
     vec3 normal = normalize(vNormal);
@@ -144,22 +153,27 @@ const fragmentShader = `
 export const Ground: React.FC<GroundProps> = ({
   radius,
   color,
+  outerColor,
+  colorRadius = 0,
   position = [0, 0, 0],
   noiseScale = 0.5,
   noiseIntensity = 0.4,
 }) => {
   const uniforms = useMemo(() => {
     const colorObj = new Color(color)
+    const outerColorObj = new Color(outerColor ?? color)
     return UniformsUtils.merge([
       UniformsLib.lights,
       UniformsLib.fog,
       {
         uColor: { value: colorObj },
+        uOuterColor: { value: outerColorObj },
+        uColorRadius: { value: colorRadius },
         uNoiseScale: { value: noiseScale },
         uNoiseIntensity: { value: noiseIntensity },
       },
     ])
-  }, [color, noiseScale, noiseIntensity])
+  }, [color, outerColor, colorRadius, noiseScale, noiseIntensity])
 
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={position} receiveShadow>
