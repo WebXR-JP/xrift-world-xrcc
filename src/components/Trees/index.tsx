@@ -400,9 +400,9 @@ export const Trees: React.FC<TreesProps> = ({
         const s = tree.scale
         // MarchingCubes出力は原点中心（約 -0.5〜0.6 範囲）なので
         // スケールで樹冠サイズに拡大し、幹の上に配置
-        pos.set(tree.x, 2.0 * s, tree.z)
+        pos.set(tree.x, 3.0 * s, tree.z)
         quat.setFromAxisAngle(yAxis, tree.rotation)
-        scl.set(s * 3.5, s * 3.0, s * 3.5)
+        scl.set(s * 5.0, s * 4.5, s * 5.0)
         mat.compose(pos, quat, scl)
         fMesh.setMatrixAt(gi, mat)
 
