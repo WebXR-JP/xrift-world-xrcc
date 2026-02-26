@@ -246,27 +246,14 @@ const foliageFS = `
 
   void main() {
     vec3 normal = normalize(vNormal);
-
-    // II. 表面ディテール（葉の質感）をシェーダー側で実現
-    // 細かなノイズで法線を擾乱し、ガサガサ感を出す
-    // Selection: ワールド座標ベースの閾値で「激しい部分」と「滑らかな部分」を混在
-    vec3 np = vWorldPosition * 12.0;
-    float detailNoise = sin(np.x) * cos(np.y * 1.1) * sin(np.z * 0.9);
-    float fineNoise = sin(np.x * 2.3 + 1.0) * cos(np.y * 2.7) * sin(np.z * 2.1 + 0.5);
-    // Boolean 的な選択: 一部の領域にのみ強いディテールを適用
-    float selection = step(0.1, sin(vWorldPosition.x * 5.0 + vWorldPosition.z * 4.0));
-    float bump = (detailNoise * 0.15 + fineNoise * 0.08) * mix(0.3, 1.0, selection);
-    normal = normalize(normal + vec3(bump, bump * 0.5, bump * 0.8));
-
     vec3 lightDir = normalize(vec3(0.4, 0.8, 0.3));
     float NdotL = dot(normal, lightDir);
 
     // Normal の Y 成分で疑似的な透過表現（茂みの密度感・透け感）
     float translucency = max(0.0, normal.y) * 0.25;
-    float lighting = NdotL * 0.5 + 0.5 + translucency;
 
-    // ポイントライト
-    vec3 ptLight = vec3(0.0);
+    // ポイントライトの影響もスカラー化して合算
+    float ptLightIntensity = 0.0;
     #if NUM_POINT_LIGHTS > 0
       for (int i = 0; i < NUM_POINT_LIGHTS; i++) {
         vec3 lPos = (inverse(viewMatrix) * vec4(pointLights[i].position, 1.0)).xyz;
@@ -278,24 +265,24 @@ const foliageFS = `
           falloff *= saturate(1.0 - pow(lDist / pointLights[i].distance, 4.0));
         }
         float diff = max(dot(normal, lDir), 0.0);
-        ptLight += pointLights[i].color * diff * falloff;
+        float intensity = (pointLights[i].color.r + pointLights[i].color.g + pointLights[i].color.b) * 0.333;
+        ptLightIntensity += diff * falloff * intensity;
       }
     #endif
 
-    lighting += (ptLight.r + ptLight.g + ptLight.b) * 0.3;
+    // 全ライティングを1つのスカラーにまとめてからセル化
+    float lighting = NdotL * 0.5 + 0.5 + translucency + ptLightIntensity * 0.3;
     lighting = clamp(lighting, 0.0, 1.2);
 
-    // Color Ramp (Constant 補間) = 4段階 step 関数
+    // Color Ramp (Constant 補間) = 4段階 step 関数 → パキッとした色分け
     vec3 cel;
     if (lighting < 0.35) cel = COLOR_SHADOW;
     else if (lighting < 0.55) cel = COLOR_DARK;
     else if (lighting < 0.75) cel = COLOR_MID;
     else cel = COLOR_HIGHLIGHT;
 
-    // IV. Object Info Random で Hue/Saturation シフト（木ごとの色相バリエーション）
-    cel += mix(vec3(0.04, 0.02, -0.03), vec3(-0.02, 0.03, 0.02), vColorShift);
-    cel *= (vec3(1.0) + ambientLightColor * 0.5);
-    cel += ptLight * 0.15;
+    // IV. Object Info Random で木ごとの色相バリエーション（微量のシフトのみ）
+    cel += mix(vec3(0.01, 0.005, -0.005), vec3(-0.005, 0.01, 0.005), vColorShift);
 
     gl_FragColor = vec4(cel, 1.0);
     #include <fog_fragment>
