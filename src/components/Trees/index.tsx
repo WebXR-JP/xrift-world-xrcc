@@ -94,32 +94,32 @@ const createFoliageGeometry = (variantSeed: number): BufferGeometry => {
     return x - Math.floor(x)
   }
 
-  // 解像度の最適化: Size (Voxel Size) モードに相当
-  // resolution=80 で十分滑らかな等値面（~16,000三角形）を生成
-  const resolution = 80
+  // 解像度の最適化: 低スペック端末を考慮して解像度を下げる
+  // resolution=40 でフラットシェーディングと組み合わせれば十分な見た目
+  const resolution = 16
   const dummyMat = new MeshBasicMaterial()
-  const mc = new MarchingCubes(resolution, dummyMat, false, false, 200000)
+  const mc = new MarchingCubes(resolution, dummyMat, false, false, 20000)
   mc.isolation = 80
 
   // I. ポイント散布 + ノイズオフセット + ランダム半径のメタボール配置
-  const blobCount = 10 + Math.floor(rng(0) * 4) // 10〜13個の塊
+  const blobCount = 7 + Math.floor(rng(0) * 3) // 7〜9個の塊
   for (let i = 0; i < blobCount; i++) {
     // ベース球内部に均一散布（cube root で体積均一分布）
     const theta = rng(i * 10 + 2) * Math.PI * 2
     const phi = Math.acos(2 * rng(i * 10 + 3) - 1)
-    const r = Math.pow(rng(i * 10 + 4), 0.33) * 0.28
+    const r = Math.pow(rng(i * 10 + 4), 0.33) * 0.2
 
     let bx = 0.5 + r * Math.sin(phi) * Math.cos(theta)
-    let by = 0.5 + r * Math.sin(phi) * Math.sin(theta) * 0.6 // Y を潰す
+    let by = 0.5 + r * Math.sin(phi) * Math.sin(theta) * 0.5 // Y を潰す
     let bz = 0.5 + r * Math.cos(phi)
 
     // ノイズで位置をずらす（0.5を引いて中心からずれないように）
-    bx += (rng(i * 10 + 5) - 0.5) * 0.16
-    by += (rng(i * 10 + 6) - 0.5) * 0.10
-    bz += (rng(i * 10 + 7) - 0.5) * 0.16
+    bx += (rng(i * 10 + 5) - 0.5) * 0.1
+    by += (rng(i * 10 + 6) - 0.5) * 0.06
+    bz += (rng(i * 10 + 7) - 0.5) * 0.1
 
     // 塊ごとにランダムなサイズ (Points to Volume の Radius + Random Value)
-    const strength = 0.4 + rng(i * 10 + 1) * 0.7
+    const strength = 0.3 + rng(i * 10 + 1) * 0.5
     mc.addBall(bx, by, bz, strength, 12)
   }
 
@@ -162,34 +162,32 @@ const createFoliageGeometry = (variantSeed: number): BufferGeometry => {
     const ny = norm.getY(i)
     const nz = norm.getZ(i)
 
-    // 細かなノイズ（Detail/Roughness を高めた Noise Texture に相当）
-    const freq1 = 18.0
+    // ノイズで葉の凹凸感を出す（1レイヤーに簡略化）
+    const freq = 14.0
     const n1 =
-      Math.sin(px * freq1 + variantSeed) *
-      Math.cos(py * freq1 * 1.1 + variantSeed * 0.7) *
-      Math.sin(pz * freq1 * 0.9 + variantSeed * 1.3)
+      Math.sin(px * freq + variantSeed) *
+      Math.cos(py * freq * 1.1 + variantSeed * 0.7) *
+      Math.sin(pz * freq * 0.9 + variantSeed * 1.3)
 
-    const freq2 = 35.0
-    const n2 =
-      Math.sin(px * freq2 + variantSeed * 2.1) *
-      Math.cos(py * freq2 * 0.8 + variantSeed * 1.5) *
-      Math.sin(pz * freq2 * 1.2 + variantSeed * 0.3)
-
-    // 正規化済み法線方向に変位（シルエットに影響する凹凸）
-    const displacement = n1 * 0.06 + n2 * 0.03
+    const displacement = n1 * 0.07
     pos.setX(i, px + nx * displacement)
     pos.setY(i, py + ny * displacement)
     pos.setZ(i, pz + nz * displacement)
   }
 
-  // 変位後の法線を再計算
-  geo.computeVertexNormals()
+  // フラットシェーディング用:
+  // 1. toNonIndexed() で各面に独自の頂点を持たせる
+  // 2. computeVertexNormals() で面法線を計算（頂点非共有なので各面がフラットになる）
+  // → 各三角形が1色になり、パキッとしたセルシェーディングが実現される
+  const flatGeo = geo.toNonIndexed()
+  geo.dispose()
+  flatGeo.computeVertexNormals()
 
   // MarchingCubes リソース解放
   dummyMat.dispose()
   mc.geometry.dispose()
 
-  return geo
+  return flatGeo
 }
 
 // ========== III. アニメ調セルシェーディング ==========
@@ -229,14 +227,12 @@ const foliageVS = `
   }
 `
 
-// Shader to RGB → Color Ramp (Constant) + Normal.Y 透過表現
+// Shader to RGB → Color Ramp (Constant)
 const foliageFS = `
   #include <common>
   #include <fog_pars_fragment>
-  #include <lights_pars_begin>
 
   varying vec3 vNormal;
-  varying vec3 vWorldPosition;
   varying float vColorShift;
 
   const vec3 COLOR_SHADOW    = vec3(0.01, 0.03, 0.01);
@@ -246,42 +242,16 @@ const foliageFS = `
 
   void main() {
     vec3 normal = normalize(vNormal);
-    vec3 lightDir = normalize(vec3(0.4, 0.8, 0.3));
-    float NdotL = dot(normal, lightDir);
 
-    // Normal の Y 成分で疑似的な透過表現（茂みの密度感・透け感）
-    float translucency = max(0.0, normal.y) * 0.25;
+    vec3 lightDir = normalize(vec3(0.5, 0.6, 0.4));
+    float NdotL = dot(normal, lightDir) * 0.5 + 0.5;
 
-    // ポイントライトの影響もスカラー化して合算
-    float ptLightIntensity = 0.0;
-    #if NUM_POINT_LIGHTS > 0
-      for (int i = 0; i < NUM_POINT_LIGHTS; i++) {
-        vec3 lPos = (inverse(viewMatrix) * vec4(pointLights[i].position, 1.0)).xyz;
-        vec3 lDir = lPos - vWorldPosition;
-        float lDist = length(lDir);
-        lDir = normalize(lDir);
-        float falloff = 1.0 / max(pow(lDist, pointLights[i].decay), 0.01);
-        if (pointLights[i].distance > 0.0) {
-          falloff *= saturate(1.0 - pow(lDist / pointLights[i].distance, 4.0));
-        }
-        float diff = max(dot(normal, lDir), 0.0);
-        float intensity = (pointLights[i].color.r + pointLights[i].color.g + pointLights[i].color.b) * 0.333;
-        ptLightIntensity += diff * falloff * intensity;
-      }
-    #endif
-
-    // 全ライティングを1つのスカラーにまとめてからセル化
-    float lighting = NdotL * 0.5 + 0.5 + translucency + ptLightIntensity * 0.3;
-    lighting = clamp(lighting, 0.0, 1.2);
-
-    // Color Ramp (Constant 補間) = 4段階 step 関数 → パキッとした色分け
     vec3 cel;
-    if (lighting < 0.35) cel = COLOR_SHADOW;
-    else if (lighting < 0.55) cel = COLOR_DARK;
-    else if (lighting < 0.75) cel = COLOR_MID;
+    if (NdotL < 0.3) cel = COLOR_SHADOW;
+    else if (NdotL < 0.5) cel = COLOR_DARK;
+    else if (NdotL < 0.7) cel = COLOR_MID;
     else cel = COLOR_HIGHLIGHT;
 
-    // IV. Object Info Random で木ごとの色相バリエーション（微量のシフトのみ）
     cel += mix(vec3(0.01, 0.005, -0.005), vec3(-0.005, 0.01, 0.005), vColorShift);
 
     gl_FragColor = vec4(cel, 1.0);
@@ -316,36 +286,18 @@ const trunkVS = `
 const trunkFS = `
   #include <common>
   #include <fog_pars_fragment>
-  #include <lights_pars_begin>
-
   varying vec3 vNormal;
-  varying vec3 vWorldPosition;
 
   const vec3 TRUNK_DARK  = vec3(0.06, 0.03, 0.02);
   const vec3 TRUNK_LIGHT = vec3(0.14, 0.09, 0.05);
 
   void main() {
     vec3 normal = normalize(vNormal);
-    vec3 lightDir = normalize(vec3(0.4, 0.8, 0.3));
+    vec3 lightDir = normalize(vec3(0.5, 0.6, 0.4));
     float NdotL = dot(normal, lightDir) * 0.5 + 0.5;
 
     vec3 col = NdotL > 0.5 ? TRUNK_LIGHT : TRUNK_DARK;
 
-    #if NUM_POINT_LIGHTS > 0
-      for (int i = 0; i < NUM_POINT_LIGHTS; i++) {
-        vec3 lPos = (inverse(viewMatrix) * vec4(pointLights[i].position, 1.0)).xyz;
-        vec3 lDir = lPos - vWorldPosition;
-        float lDist = length(lDir);
-        lDir = normalize(lDir);
-        float falloff = 1.0 / max(pow(lDist, pointLights[i].decay), 0.01);
-        if (pointLights[i].distance > 0.0) {
-          falloff *= saturate(1.0 - pow(lDist / pointLights[i].distance, 4.0));
-        }
-        col += pointLights[i].color * max(dot(normal, lDir), 0.0) * falloff * 0.2;
-      }
-    #endif
-
-    col *= (vec3(1.0) + ambientLightColor * 0.3);
     gl_FragColor = vec4(col, 1.0);
     #include <fog_fragment>
   }
@@ -387,7 +339,7 @@ export const Trees: React.FC<TreesProps> = ({
     [],
   )
 
-  const trunkGeo = useMemo(() => new CylinderGeometry(0.15, 0.3, 3, 8), [])
+  const trunkGeo = useMemo(() => new CylinderGeometry(0.15, 0.3, 2.4, 8), [])
 
   const foliageMat = useMemo(
     () =>
@@ -395,11 +347,9 @@ export const Trees: React.FC<TreesProps> = ({
         vertexShader: foliageVS,
         fragmentShader: foliageFS,
         uniforms: UniformsUtils.merge([
-          UniformsLib.lights,
           UniformsLib.fog,
           { uTime: { value: 0 } },
         ]),
-        lights: true,
         fog: true,
       }),
     [],
@@ -410,8 +360,7 @@ export const Trees: React.FC<TreesProps> = ({
       new ShaderMaterial({
         vertexShader: trunkVS,
         fragmentShader: trunkFS,
-        uniforms: UniformsUtils.merge([UniformsLib.lights, UniformsLib.fog]),
-        lights: true,
+        uniforms: UniformsUtils.merge([UniformsLib.fog]),
         fog: true,
       }),
     [],
@@ -451,7 +400,7 @@ export const Trees: React.FC<TreesProps> = ({
         const s = tree.scale
         // MarchingCubes出力は原点中心（約 -0.5〜0.6 範囲）なので
         // スケールで樹冠サイズに拡大し、幹の上に配置
-        pos.set(tree.x, 3.2 * s, tree.z)
+        pos.set(tree.x, 2.0 * s, tree.z)
         quat.setFromAxisAngle(yAxis, tree.rotation)
         scl.set(s * 3.5, s * 3.0, s * 3.5)
         mat.compose(pos, quat, scl)
@@ -471,7 +420,7 @@ export const Trees: React.FC<TreesProps> = ({
     // 幹のインスタンスセットアップ
     treePositions.forEach((tree, i) => {
       const s = tree.scale
-      pos.set(tree.x, 1.5 * s, tree.z)
+      pos.set(tree.x, 1.2 * s, tree.z)
       quat.setFromAxisAngle(yAxis, tree.rotation)
       scl.set(s, s, s)
       mat.compose(pos, quat, scl)

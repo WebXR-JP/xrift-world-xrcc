@@ -63,7 +63,7 @@ export const World: React.FC<WorldProps> = ({
 
       {/* 木 */}
       <Trees
-        count={160}
+        count={128}
         innerRadius={worldSize * 1.1}
         outerRadius={worldSize * 1.9}
       />
