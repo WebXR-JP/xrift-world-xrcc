@@ -1,4 +1,8 @@
-import { SpawnPoint, ScreenShareDisplay } from "@xrift/world-components";
+import {
+  SpawnPoint,
+  ScreenShareDisplay,
+  Portal,
+} from "@xrift/world-components";
 import { RigidBody } from "@react-three/rapier";
 import { useThree } from "@react-three/fiber";
 import { useLayoutEffect } from "react";
@@ -106,6 +110,13 @@ export const World: React.FC<WorldProps> = ({
         position={[-worldSize * 0.85, 0, 0]}
         rotation={[0, Math.PI / 2, 0]}
         color={COLORS.wall}
+      />
+
+      {/* ポータル（北東の照明の間） */}
+      <Portal
+        instanceId="ceffb128-23c7-4120-b4e6-19bf6c604c47"
+        position={[worldSize * 0.6, 0, -worldSize * 0.6]}
+        rotation={[0, -Math.PI / 4, 0]}
       />
 
       {/* 入口の看板（ロゴ・TagBoard・ミラー） */}
