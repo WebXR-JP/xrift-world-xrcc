@@ -1,5 +1,5 @@
 import { RigidBody } from "@react-three/rapier";
-import { LiveVideoPlayer, Interactable, useXRift } from "@xrift/world-components";
+import { LiveVideoPlayer, Interactable, useXRift, useConfirm } from "@xrift/world-components";
 import { useTexture } from "@react-three/drei";
 
 export interface VideoWallProps {
@@ -45,14 +45,25 @@ const BOOTH_URL = "https://sawa-zen.booth.pm/items/7919966";
 
 const PebbleChatBanner: React.FC<{ id: string }> = ({ id }) => {
   const { baseUrl } = useXRift();
+  const { requestConfirm } = useConfirm();
   const texture = useTexture(`${baseUrl}pebble_chat.png`);
+
+  const handleInteract = async () => {
+    const ok = await requestConfirm({
+      title: "PebbleChat",
+      message: "BOOTHの商品ページを開きますか？",
+      confirmLabel: "開く",
+      cancelLabel: "キャンセル",
+    });
+    if (ok) {
+      window.open(BOOTH_URL, "_blank");
+    }
+  };
 
   return (
     <Interactable
       id={id}
-      onInteract={() => {
-        window.open(BOOTH_URL, "_blank");
-      }}
+      onInteract={handleInteract}
       interactionText="BOOTHで見る"
     >
       <mesh position={[WALL_WIDTH / 2 - BANNER_SIZE / 2 - 0.38, BANNER_SIZE / 2 + 0.4, 0.3]} scale={[0.5, 0.5, 0.5]}>
