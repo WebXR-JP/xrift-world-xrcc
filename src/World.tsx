@@ -119,6 +119,13 @@ export const World: React.FC<WorldProps> = ({
         rotation={[0, -Math.PI / 4, 0]}
       />
 
+      {/* ポータル（南西の照明の間） */}
+      <Portal
+        instanceId="fb2273aa-ab54-488a-a167-733f897143b9"
+        position={[-worldSize * 0.6, 0, worldSize * 0.6]}
+        rotation={[0, (Math.PI * 3) / 4, 0]}
+      />
+
       {/* 入口の看板（ロゴ・TagBoard・ミラー） */}
       <EntranceSignboard
         position={[worldSize * 1.05 - 2, 0, worldSize * 1.05 + 2]}
