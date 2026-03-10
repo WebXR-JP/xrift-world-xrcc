@@ -66,11 +66,12 @@ const fragmentShader = `
     float gradient = pow(height, 0.5);
     vec3 skyColor = mix(horizonColor, topColor, gradient);
 
-    // 星を追加
+    // 星を追加（下に行くほど薄くなる）
     float starField = stars(direction);
+    float starFade = smoothstep(-0.1, 0.5, direction.y); // 地平線付近から上に向かって明るく
     vec3 starColor = vec3(1.0, 0.98, 0.9); // わずかに暖かい白
 
-    vec3 finalColor = skyColor + starColor * starField;
+    vec3 finalColor = skyColor + starColor * starField * starFade;
 
     gl_FragColor = vec4(finalColor, 1.0);
   }
