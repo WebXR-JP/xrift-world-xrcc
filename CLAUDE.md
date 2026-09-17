@@ -9,6 +9,7 @@
 1. **アセット読み込みは必ず `useXRift()` の `baseUrl` を使用**
 2. **アセットファイルは `public/` ディレクトリに配置**
 3. **`baseUrl` は末尾に `/` を含むため、`${baseUrl}path` で結合**（`${baseUrl}/path` は NG）
+4. **`vite.config.ts` の `requiredVersion` は絶対に書き換えない**（後述「共有依存のバージョン」）
 
 ```typescript
 // ✅ 正しい
@@ -367,6 +368,71 @@ createRoot(rootElement).render(
 
 ---
 
+## 共有依存のバージョン（触ると壊れる）
+
+`three` / `@react-three/*` / `@xrift/world-components` などは、ワールドが自分で持たず
+**XRift 本体から借りて動く**（Module Federation の shared）。
+
+### 絶対にやってはいけないこと
+
+`vite.config.ts` の `requiredVersion` を、`package.json` の実バージョンに合わせて更新すること。
+
+```typescript
+// ❌ 絶対NG：package.json を上げたからといって、ここを揃えてはいけない
+three: {
+  singleton: true,
+  requiredVersion: '^0.182.0',   // 上げた瞬間にワールドが起動しなくなる
+},
+
+// ✅ 正しい：package.json と一致していなくてよい。むしろズレているのが正常
+three: {
+  singleton: true,
+  requiredVersion: '^0.176.0',
+},
+```
+
+### 理由
+
+`requiredVersion` は本体が出している「札」との照合にしか使われず、実行時に渡されるのは
+常に本体が持っている実物。したがって揃えても得るものは何もなく、照合に失敗するだけになる。
+
+照合に失敗するとワールド同梱の予備 `__federation_shared_*.js` を読みに行くが、
+これは `xrift.json` の `ignore` によりアップロードされていないため 404 になり、ワールドごと落ちる。
+
+```
+[useWorldComponent] Failed to load world: TypeError: Failed to fetch
+dynamically imported module: .../__federation_shared_three-XXXX.js
+```
+
+0.x の `^` は `^0.176.0` = `>=0.176.0 <0.177.0` と極端に狭いので、わずかに上げるだけで即不一致になる。
+
+### 新しい API を使いたいとき
+
+`package.json` の依存だけを上げる。`vite.config.ts` は触らない。
+
+```bash
+npm i @xrift/world-components@latest   # 型とビルドが新しくなる
+npm run typecheck && npm run build     # requiredVersion は変更しない
+```
+
+本体が出している札の一覧は
+[xrift-frontend の `DEV_SHARED_DEPENDENCIES`](https://github.com/WebXR-JP/xrift-frontend/blob/main/src/screens/InstanceScreen/components/InstanceWorld/hooks/utils.ts)
+にある。ビルド後の `dist/__federation_fn_import-*.js` の `requiredVersion` と突き合わせれば事前に確認できる。
+
+### xrift.json の ignore は `**/` を付けない
+
+除外判定は minimatch ではなく @xrift/sdk の素朴な正規表現で行われ、
+`**/` は「`/` が1つ以上必要」と解釈される。トップレベルのファイルを除外したいときに
+`**/foo-*.js` と書くと**静かに無視される**ので、`foo-*.js` と書くこと。
+
+### world-components が新しい依存を使い始めたとき
+
+ビルドが `Rollup failed to resolve import "..."` で落ちたら、その依存も本体から借りる必要がある。
+本体の札にあることを確認した上で、devDependencies に追加し `shared` にも宣言し、
+`xrift.json` の `ignore` にフォールバックを追加する（3箇所セット）。
+
+---
+
 ## トラブルシューティング
 
 ### "useXRift must be used within XRiftProvider"
@@ -391,6 +457,16 @@ const model = useGLTF(`${baseUrl}models/robot.glb`)
 const model = useGLTF('/models/robot.glb')
 const model = useGLTF(`${baseUrl}/models/robot.glb`)
 ```
+
+### ワールドが読み込めない / `Failed to fetch dynamically imported module`
+
+**原因**: `vite.config.ts` の `requiredVersion` が本体の札と一致せず、
+存在しないフォールバック `__federation_shared_*.js` を取りに行っている
+
+**解決方法**: `requiredVersion` を元に戻す（「共有依存のバージョン」を参照）。
+`package.json` の番号に合わせて揃えてはいけない。
+
+---
 
 ### 物理演算が効かない
 

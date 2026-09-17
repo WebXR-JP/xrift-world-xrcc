@@ -7,6 +7,7 @@ import {
   AdditiveBlending,
   Vector3,
 } from "three";
+import { getBillboardYRotation } from "@xrift/world-components";
 
 export interface EmbersProps {
   position?: [number, number, number];
@@ -132,9 +133,7 @@ export const Embers: React.FC<EmbersProps> = ({
       );
 
       // Y軸ビルボード
-      const dx = cameraWorldPos.x - dummy.position.x;
-      const dz = cameraWorldPos.z - dummy.position.z;
-      dummy.rotation.y = Math.atan2(dx, dz);
+      dummy.rotation.y = getBillboardYRotation(cameraWorldPos, dummy.position);
 
       // スケール（フェードアウト）
       const currentScale = size * e.scale * lifeRatio;

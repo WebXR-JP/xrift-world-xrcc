@@ -33,6 +33,18 @@ federation({
 - `name`: Module Federationで使用される識別子
 - スペースや特殊文字は使用せず、アンダースコアで区切る
 
+> **⚠️ `shared` の `requiredVersion` は変更しないこと**
+>
+> `three` などは XRift 本体から借りて動くため、`requiredVersion` は本体が出している値と
+> 一致していなければならない。`package.json` の実バージョンと違っていても正常。
+> 揃えるとワールドが起動しなくなる（詳細は CLAUDE.md「共有依存のバージョン」）。
+
+> **⚠️ `shared` の `requiredVersion` は変更しないこと**
+>
+> `three` などは XRift 本体から借りて動くため、`requiredVersion` は本体が出している値と
+> 一致していなければならない。`package.json` の実バージョンと違っていても正常。
+> 揃えるとワールドが起動しなくなる（詳細は CLAUDE.md「共有依存のバージョン」）。
+
 ### 3. index.html
 
 ```html
@@ -278,6 +290,14 @@ npm run preview
 
 - `npm run typecheck` で型エラーを確認
 - `node_modules` を削除して再インストール: `rm -rf node_modules && npm install`
+- `Rollup failed to resolve import` の場合は、world-components が新しく使い始めた依存を
+  借りる宣言が足りていない（CLAUDE.md「共有依存のバージョン」を参照）
+
+### アップロード後にワールドが読み込めない
+
+`Failed to fetch dynamically imported module: .../__federation_shared_*.js` が出る場合、
+`vite.config.ts` の `requiredVersion` が XRift 本体の値と一致していない。
+`package.json` に合わせて書き換えていないか確認する（CLAUDE.md「共有依存のバージョン」）。
 
 ### 物理演算が動作しない
 

@@ -1,6 +1,7 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { ShaderMaterial, AdditiveBlending, Mesh, UniformsLib, UniformsUtils, Vector3 } from 'three'
+import { ShaderMaterial, AdditiveBlending, UniformsLib, UniformsUtils } from 'three'
+import { BillboardY } from '@xrift/world-components'
 
 export interface FireProps {
   position?: [number, number, number]
@@ -129,7 +130,6 @@ const fragmentShader = `
 
 export const Fire: React.FC<FireProps> = ({ position = [0, 0, 0], scale = 1 }) => {
   const materialRef = useRef<ShaderMaterial>(null)
-  const meshRef = useRef<Mesh>(null)
 
   const uniforms = useMemo(
     () => UniformsUtils.merge([
@@ -142,35 +142,29 @@ export const Fire: React.FC<FireProps> = ({ position = [0, 0, 0], scale = 1 }) =
     []
   )
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (materialRef.current) {
       materialRef.current.uniforms.uTime.value += delta
-    }
-    // Y軸のみのビルボード（VR対応: ワールド座標を使用）
-    if (meshRef.current) {
-      const cameraWorldPos = state.camera.getWorldPosition(new Vector3())
-      const meshWorldPos = meshRef.current.getWorldPosition(new Vector3())
-      const dx = cameraWorldPos.x - meshWorldPos.x
-      const dz = cameraWorldPos.z - meshWorldPos.z
-      meshRef.current.rotation.y = Math.atan2(dx, dz)
     }
   })
 
   return (
     <group position={position} scale={scale}>
-      <mesh ref={meshRef} position={[0, 0.6, 0]}>
-        <planeGeometry args={[1, 1.5, 32, 32]} />
-        <shaderMaterial
-          ref={materialRef}
-          vertexShader={vertexShader}
-          fragmentShader={fragmentShader}
-          uniforms={uniforms}
-          transparent
-          blending={AdditiveBlending}
-          depthWrite={false}
-          fog={false}
-        />
-      </mesh>
+      <BillboardY position={[0, 0.6, 0]}>
+        <mesh>
+          <planeGeometry args={[1, 1.5, 32, 32]} />
+          <shaderMaterial
+            ref={materialRef}
+            vertexShader={vertexShader}
+            fragmentShader={fragmentShader}
+            uniforms={uniforms}
+            transparent
+            blending={AdditiveBlending}
+            depthWrite={false}
+            fog={false}
+          />
+        </mesh>
+      </BillboardY>
     </group>
   )
 }
