@@ -47,6 +47,15 @@ export default defineConfig({
           singleton: true,
           requiredVersion: '^10.7.3',
         },
+        // world-components が内部で使う。ホストから借りる
+        '@react-three/uikit': {
+          singleton: true,
+          requiredVersion: '^1.0.0',
+        },
+        '@pmndrs/uikit': {
+          singleton: true,
+          requiredVersion: '^1.0.0',
+        },
         '@xrift/world-components': {
           singleton: true,
           requiredVersion: '^0.1.0',
