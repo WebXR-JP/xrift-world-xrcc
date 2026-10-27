@@ -19,6 +19,35 @@ import { VideoWall } from "./components/VideoWall";
 import { WoodenSignboard } from "./components/WoodenSignboard";
 import { COLORS, WORLD_CONFIG } from "./constants";
 
+// 同じ角に並ぶポータル同士の間隔
+const PORTAL_SPACING = 2.5;
+
+// x, z は角の方向（±1）、rotationY はワールド中心を向く回転
+const PORTAL_CORNERS = [
+  {
+    // 北東
+    x: 1,
+    z: -1,
+    rotationY: -Math.PI / 4,
+    instanceIds: [
+      "fe9604ff-b61b-4dc1-8098-d0d2d4fa86d1",
+      "33aa9c29-d290-42a2-a82c-0c3b5e2e96df",
+      "8d90047d-b2d8-47fe-bc96-4b61ffffda31",
+    ],
+  },
+  {
+    // 南西
+    x: -1,
+    z: 1,
+    rotationY: (Math.PI * 3) / 4,
+    instanceIds: [
+      "7ee2dd84-3c4e-47f0-8d5d-dfeb711eafb9",
+      "0772dea4-b017-4f1c-8afe-9bd0c36c037d",
+      "e6b5fdb2-e9e7-4081-88a1-407a5ec28a34",
+    ],
+  },
+] as const;
+
 export interface WorldProps {
   position?: [number, number, number];
   scale?: number;
@@ -112,19 +141,26 @@ export const World: React.FC<WorldProps> = ({
         color={COLORS.wall}
       />
 
-      {/* ポータル（北東の照明の間） */}
-      <Portal
-        instanceId="ceffb128-23c7-4120-b4e6-19bf6c604c47"
-        position={[worldSize * 0.6, 0, -worldSize * 0.6]}
-        rotation={[0, -Math.PI / 4, 0]}
-      />
-
-      {/* ポータル（南西の照明の間） */}
-      <Portal
-        instanceId="fb2273aa-ab54-488a-a167-733f897143b9"
-        position={[-worldSize * 0.6, 0, worldSize * 0.6]}
-        rotation={[0, (Math.PI * 3) / 4, 0]}
-      />
+      {/* ポータル（北東・南西の照明の間に3基ずつ） */}
+      {PORTAL_CORNERS.map(({ instanceIds, x, z, rotationY }) =>
+        instanceIds.map((instanceId, i) => {
+          // 中心方向と直交する向きに、真ん中を基準に左右へずらす
+          const offset =
+            (i - (instanceIds.length - 1) / 2) * PORTAL_SPACING * Math.SQRT1_2;
+          return (
+            <Portal
+              key={instanceId}
+              instanceId={instanceId}
+              position={[
+                x * worldSize * 0.6 - z * offset,
+                0,
+                z * worldSize * 0.6 + x * offset,
+              ]}
+              rotation={[0, rotationY, 0]}
+            />
+          );
+        }),
+      )}
 
       {/* 入口の看板（ロゴ・TagBoard・ミラー） */}
       <EntranceSignboard
