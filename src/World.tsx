@@ -23,16 +23,17 @@ import { COLORS, WORLD_CONFIG } from "./constants";
 const PORTAL_SPACING = 2.5;
 
 // x, z は角の方向（±1）、rotationY はワールド中心を向く回転
+// 行き先は worldId で指定する（くぐると空いている部屋に合流、無ければ作成される）
 const PORTAL_CORNERS = [
   {
     // 北東
     x: 1,
     z: -1,
     rotationY: -Math.PI / 4,
-    instanceIds: [
-      "fe9604ff-b61b-4dc1-8098-d0d2d4fa86d1",
-      "33aa9c29-d290-42a2-a82c-0c3b5e2e96df",
-      "8d90047d-b2d8-47fe-bc96-4b61ffffda31",
+    worldIds: [
+      "c12b97a7-2d07-4c76-85fb-c3dfd0a0e380", // のらねこび自然科学館
+      "bbfdfefe-f572-468e-8cd2-1884205d3e1c", // PONG PONG BATTLER
+      "b80fca9c-2d69-4b36-8cb4-e99061175cd8", // カートクラブ
     ],
   },
   {
@@ -40,10 +41,10 @@ const PORTAL_CORNERS = [
     x: -1,
     z: 1,
     rotationY: (Math.PI * 3) / 4,
-    instanceIds: [
-      "7ee2dd84-3c4e-47f0-8d5d-dfeb711eafb9",
-      "0772dea4-b017-4f1c-8afe-9bd0c36c037d",
-      "e6b5fdb2-e9e7-4081-88a1-407a5ec28a34",
+    worldIds: [
+      "e945aa6c-5ab1-4d7c-963c-ec6f0bac1299", // XRiftStudio Tutorial
+      "41100e01-be41-4ee4-81eb-11a30c4f927c", // 3DGS Gallery Island
+      "34deb9ee-732a-4af3-ad75-541413a00caf", // Space Elevator
     ],
   },
 ] as const;
@@ -142,15 +143,15 @@ export const World: React.FC<WorldProps> = ({
       />
 
       {/* ポータル（北東・南西の照明の間に3基ずつ） */}
-      {PORTAL_CORNERS.map(({ instanceIds, x, z, rotationY }) =>
-        instanceIds.map((instanceId, i) => {
+      {PORTAL_CORNERS.map(({ worldIds, x, z, rotationY }) =>
+        worldIds.map((worldId, i) => {
           // 中心方向と直交する向きに、真ん中を基準に左右へずらす
           const offset =
-            (i - (instanceIds.length - 1) / 2) * PORTAL_SPACING * Math.SQRT1_2;
+            (i - (worldIds.length - 1) / 2) * PORTAL_SPACING * Math.SQRT1_2;
           return (
             <Portal
-              key={instanceId}
-              instanceId={instanceId}
+              key={worldId}
+              worldId={worldId}
               position={[
                 x * worldSize * 0.6 - z * offset,
                 0,
