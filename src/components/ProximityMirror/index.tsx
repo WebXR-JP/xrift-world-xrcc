@@ -7,12 +7,15 @@ export interface ProximityMirrorProps {
   position?: [number, number, number];
   size?: [number, number];
   maxDistance?: number;
+  /** 反射テクスチャの長辺の解像度（px） */
+  textureResolution?: number;
 }
 
 export const ProximityMirror: React.FC<ProximityMirrorProps> = ({
   position = [0, 0, 0],
   size = [1.5, 2],
   maxDistance = 10,
+  textureResolution = 1024,
 }) => {
   const { getLocalMovement } = useUsers();
   const [visible, setVisible] = useState(false);
@@ -37,7 +40,11 @@ export const ProximityMirror: React.FC<ProximityMirrorProps> = ({
   return (
     <group ref={groupRef} position={position}>
       {visible ? (
-        <Mirror position={[0, 0, 0]} size={size} />
+        <Mirror
+          position={[0, 0, 0]}
+          size={size}
+          textureResolution={textureResolution}
+        />
       ) : (
         <mesh>
           <planeGeometry args={size} />
