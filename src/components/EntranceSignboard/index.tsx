@@ -1,6 +1,5 @@
-import { TagBoard, useXRift } from "@xrift/world-components";
+import { Mirror, TagBoard, useXRift } from "@xrift/world-components";
 import { useTexture } from "@react-three/drei";
-import { ProximityMirror } from "../ProximityMirror";
 import { WoodenSignboard } from "../WoodenSignboard";
 
 export interface EntranceSignboardProps {
@@ -18,10 +17,11 @@ export const EntranceSignboard: React.FC<EntranceSignboardProps> = ({
       <group position={[-1, -0.65, 0]} scale={0.6}>
         <TagBoard instanceStateKey="entrance-tagboard" />
       </group>
-      <ProximityMirror
+      <Mirror
         position={[1.35, 0, 0]}
         size={[1.7, 2.5]}
-        maxDistance={10}
+        textureResolution={1024}
+        lodDistance={10}
       />
     </WoodenSignboard>
   );
